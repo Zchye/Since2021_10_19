@@ -1,0 +1,16 @@
+37.910 uma rma scenario 
+
+antenna configuration
+
+csi-rs config according to mimo example
+*************************************************
+implemented wrap around
+
+minimum gnb ue distance
+
+fixed the 4 quick fixes from before
+
+full scale simulation
+
+error on slot 14
+*************************************************
