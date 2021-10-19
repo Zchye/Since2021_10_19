@@ -46,7 +46,7 @@ function CHParam = ConfigChannel(param, LinkDir, siteIdx, RNTI)
     %If LOS=1, PropCond='LOS'; else PropCond='NLOS'.
     PropCond = strrep(char(LOS*double('LOS ')+(1-LOS)*double('NLOS')),' ','');
     %step 3
-    [Pathloss, sigma_SF] = calculatePathloss(param,gNBPos,UEPos,LOS);
+    [Pathloss, sigma_SF] = calculatePathloss(param,gNBPos,UEPos,LOS,LinkDir);
     %step 4
     LSPs = genLSPs(param,gNBPos,UEPos,LOS,LinkDir);
     %step 5
@@ -181,7 +181,7 @@ function Prob=UMaProb(d_2D,h_UT)
 end
 
 %% step 3
-function [Pathloss, sigma_SF]=calculatePathloss(param,gNBPos,UEPos,LOS)
+function [Pathloss, sigma_SF]=calculatePathloss(param,gNBPos,UEPos,LOS,LinkDir)
     %Calculate pathloss with formulas in Table 7.4.1-1 for each BS-UT link to be modelled
     %param - a structure containing the field Scenario
     %gNBPos - the Cartesian coordinates of a gNB, must be a 3-D column
@@ -197,7 +197,11 @@ function [Pathloss, sigma_SF]=calculatePathloss(param,gNBPos,UEPos,LOS)
     h_UT=UEPos(3);
     
     %constants
-    f_c = param.DLCarrierFreq / 1e9;
+    if ~LinkDir %For DL
+        f_c = param.DLCarrierFreq/1e9; %f_c is carrier frequency in GHz
+    else %For UL
+        f_c = param.ULCarrierFreq/1e9; %f_c is carrier frequency in GHz
+    end
     
     
     %select the function to calculate LOS probability
