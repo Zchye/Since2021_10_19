@@ -426,7 +426,7 @@ function LSPs=genLSPs(param,gNBPos,UEPos,LOS,LinkDir)
     end
    
     %Read sigma_SF and PL
-    [Pathloss, sigma_SF]=calculatePathloss(param,gNBPos,UEPos,LOS);
+    [Pathloss, sigma_SF]=calculatePathloss(param,gNBPos,UEPos,LOS,LinkDir);
     CovT{'SF','SF'}=sigma_SF^2;
     mu(1)=Pathloss;
     
