@@ -1,5 +1,7 @@
-function CHParam = ConfigChannel(param, LinkDir, siteIdx, RNTI)
+function CHParam = ConfigChannel(param, LinkDir, siteIdx, UEInfo)
     %LinkDir    -   0 for DL, 1 for UL
+    %UEInfo - Could be RNTI or position of a UE. This flexibility is for
+    %heatmap.
     
     %Select proper part of the Table 7.5-6 according to the scenario
     FFTabs = param.FastFadingTabs;
@@ -17,12 +19,32 @@ function CHParam = ConfigChannel(param, LinkDir, siteIdx, RNTI)
     %Generate channel parameters
     %step 1
     
+    %Parse UEInfo
+    switch length(UEInfo)
+        case 1 % UEInfo is an RNTI
+            UEInfoType = 'RNTI';
+            RNTI = UEInfo;
+        case 3 % UEInfo is a 3-D position
+            UEInfoType = 'Position';
+            UEPos = UEInfo;
+    end
+    
     %MXC_1 
     if LinkDir == 0 % DL
         TxPos = param.GNBPositions(siteIdx,:);
-        RxPos = param.UEPositions{siteIdx}(RNTI,:);
+        switch UEInfoType
+            case 'RNTI'
+                RxPos = param.UEPositions{siteIdx}(RNTI,:);
+            case 'Position'
+                RxPos = UEPos;
+        end
     else % UL
-        TxPos = param.UEPositions{siteIdx}(RNTI,:);
+        switch UEInfoType
+            case 'RNTI'
+                TxPos = param.UEPositions{siteIdx}(RNTI,:);
+            case 'Position'
+                TxPos = UEPos;
+        end
         RxPos = param.GNBPositions(siteIdx,:);
     end
     LOSAngles = getLOSAngles(TxPos,RxPos);
