@@ -192,9 +192,9 @@ classdef hNRUEPhy < hNRPhyInterface
     
     %YXC begin
     properties (Access = public)
-        %StoreCQIInfo stores the callback to the YusUtilityObj for storing
-        %CQIInfo returned by the function hCQISelect in runtime
-        StoreCQIInfo
+        %StoreCQIInfo stores the reference to the instance of YusUtilityObj
+        %for storing CQI and PMI
+        YUO
     end
     %YXC end
     
@@ -1052,8 +1052,9 @@ classdef hNRUEPhy < hNRPhyInterface
                     %YXC begin
 %                     [cqi, pmiSet, ~, ~] = hCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
                     [cqi, pmiSet, cqiInfo, ~] = hCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
-                    %Store cqiInfo into YusUtilityObj
-                    obj.StoreCQIInfo(cqiInfo);
+                    %Store cqiInfo and pmiSet into YusUtilityObj
+                    storeCQIInfo(obj.YUO, cqiInfo);
+                    storePMISet(obj.YUO, pmiSet);
                     %YXC end
                     
                     % CQI value reported for each slot is stored in a new column

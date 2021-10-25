@@ -22,7 +22,7 @@ rng('default'); % Reset the random number generator
 simParameters = []; % Clear the simParameters variable
 
 % simulation configuration
-simParameters.NumFramesSim = 5; % Simulation time, in number of 10 ms frames
+simParameters.NumFramesSim = 0.5; % Simulation time, in number of 10 ms frames
 simParameters.EnableWrapAround = true; % Enable wrap-around modeling
 simParameters.Scenario='RMa'; %UMi, UMa or RMa
 simParameters.ScenarioConfiguration = 'A'; % A, B
@@ -140,7 +140,7 @@ switch simParameters.Scenario
                 
                 
                 % UE configuration
-                simParameters.NumUEsCell = 10; % Number of UEs in each cell
+                simParameters.NumUEsCell = 1; % Number of UEs in each cell
                 simParameters.UEHeight = 1.5; % meters
                 simParameters.UETxPower = 23; % Tx power for all the UEs in dBm
                 simParameters.UETxAnts = 1;
@@ -336,7 +336,7 @@ for siteIdx = 1:simParameters.NumSitesPerCluster
         simParameters.Position = simParameters.UEPositions{siteIdx}(ueIdx, :); % Position of UE in (x,y,z) coordinates
         UEs{siteIdx, ueIdx} = hNRUE(simParameters, ueIdx);
         UEs{siteIdx, ueIdx}.PhyEntity = hNRUEPhy(simParameters, siteIdx, ueIdx); % Create PHY layer instance
-        UEs{siteIdx, ueIdx}.PhyEntity.StoreCQIInfo = @YUO.storeCQIInfo; % Register the callback to YusUtilityObj
+        UEs{siteIdx, ueIdx}.PhyEntity.YUO = YUO; % Register the callback to YusUtilityObj
         configurePhy(UEs{siteIdx, ueIdx}, simParameters); % Configure PHY layer
         % Register distance calculator for wrap-around distance computations
         UEs{siteIdx, ueIdx}.DistanceCalculatorFcn =  distCalc;

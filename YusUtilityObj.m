@@ -4,6 +4,9 @@ classdef YusUtilityObj < handle
         %Stores the structure CQIInfo per slot per gNB per UE
         CQIInfoSet
         
+        %Stores pmiSet returned by hCQISelect inside hNRUEPhy.m
+        PMISet
+        
         %The triple (slotNum,siteIdx,ueIdx) identifies a CQIInfo
         Triple = cell(3,1);
     end
@@ -14,7 +17,8 @@ classdef YusUtilityObj < handle
             d2 = param.NumSitesPerCluster;
             %MXC_2
             d3 = param.NumUEsCell;
-            obj.CQIInfoSet = cell(d1,d2,d3);            
+            obj.CQIInfoSet = cell(d1,d2,d3);  
+            obj.PMISet = cell(d1,d2,d3);
         end
         
         function pushSlotNum(obj,slotNum)
@@ -40,7 +44,7 @@ classdef YusUtilityObj < handle
         end
         
         function storeCQIInfo(obj,cqiInfo)
-            %Push the cqiInfo returned by hCQISelect into the Triple           
+            %Push the cqiInfo returned by hCQISelect into the CQIInfoSet           
             if ~all(cellfun(@isempty,obj.Triple)==0)
                 %Throw an error if there are still emtpy cells in the
                 %Triple
@@ -50,7 +54,13 @@ classdef YusUtilityObj < handle
             idx = cellfun(@(x) x, obj.Triple); % Cast the cell array Triple to a number array
             obj.CQIInfoSet{idx(1),idx(2),idx(3)} = cqiInfo;
             
-            obj.Triple = cell(3,1);
+%             obj.Triple = cell(3,1);
+        end
+        
+        function storePMISet(obj,pmiSet)
+            %Store pmiSet in obj.PMISet
+            idx = cellfun(@(x) x, obj.Triple); % Cast the cell array Triple to a number array
+            obj.PMISet{idx(1),idx(2),idx(3)} = pmiSet;
         end
     end
 end
