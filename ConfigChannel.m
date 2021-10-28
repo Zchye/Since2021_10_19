@@ -20,11 +20,11 @@ function CHParam = ConfigChannel(param, LinkDir, siteIdx, UEInfo)
     %step 1
     
     %Parse UEInfo
-    switch length(UEInfo)
-        case 1 % UEInfo is an RNTI
-            UEInfoType = 'RNTI';
-            RNTI = UEInfo;
-        case 3 % UEInfo is a 3-D position
+    switch class(UEInfo)
+        case 'struct' % UEInfo is an RNTI
+            UEInfoType = 'States';
+%             RNTI = UEInfo;
+        case 'double' % UEInfo is a 3-D position
             UEInfoType = 'Position';
             UEPos = UEInfo;
     end
@@ -33,15 +33,15 @@ function CHParam = ConfigChannel(param, LinkDir, siteIdx, UEInfo)
     if LinkDir == 0 % DL
         TxPos = param.GNBPositions(siteIdx,:);
         switch UEInfoType
-            case 'RNTI'
-                RxPos = param.UEPositions{siteIdx}(RNTI,:);
+            case 'States'
+                RxPos = UEInfo.UEPositions;
             case 'Position'
                 RxPos = UEPos;
         end
     else % UL
         switch UEInfoType
-            case 'RNTI'
-                TxPos = param.UEPositions{siteIdx}(RNTI,:);
+            case 'States'
+                TxPos = UEInfo.UEPositions;
             case 'Position'
                 TxPos = UEPos;
         end
