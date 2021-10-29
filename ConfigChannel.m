@@ -63,7 +63,12 @@ function CHParam = ConfigChannel(param, LinkDir, siteIdx, UEInfo)
     end
     %MXC_1 
     
-    LOS = assignLOS(param,gNBPos,UEPos);
+    switch UEInfoType
+        case 'States'
+            LOS = UEInfo.LOS;
+        case 'RNTI'
+            LOS = 1; % Always LOS in heatmap mode
+    end
     %Convert LOS condition from logical to character array
     %If LOS=1, PropCond='LOS'; else PropCond='NLOS'.
     PropCond = strrep(char(LOS*double('LOS ')+(1-LOS)*double('NLOS')),' ','');
@@ -134,6 +139,8 @@ function LOSAngles=getLOSAngles(TxPos, RxPos)
 end
 
 %% step 2
+% The assignment of UE states is moved to hMacrocellTopology.m
+%{
 function LOS=assignLOS(param,gNBPos,UEPos)
     %assignLOS assigns propagation conditions (LOS/NLOS) for each BS-UT
     %link according to 3GPP TR 38.901 Table 7.4.2-1
@@ -201,6 +208,7 @@ function Prob=UMaProb(d_2D,h_UT)
         Prob=(18/d_2D+exp(-d_2D/63)*(1-18/d_2D))*(1+C*5/4*(d_2D/100)^3*exp(-d_2D/150));
     end
 end
+%}
 
 %% step 3
 % The whole step 3 (calculate pathloss) are moved to YusUtilityFunctions.m
