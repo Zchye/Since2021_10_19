@@ -258,6 +258,7 @@ classdef hNRUEPhy < hNRPhyInterface
             obj.YusUtilityParameter.Scenario = param.Scenario;
             %MXC_1
             
+            obj.YusUtilityParameter.UEStat = param.UEStat{siteIdx, rnti};
             
             % Create UL-SCH encoder system object
             ulschEncoder = nrULSCH;
@@ -1105,11 +1106,23 @@ classdef hNRUEPhy < hNRPhyInterface
             gNBPos = txInfo.Position;
             UEPos = obj.Node.NodePosition;
             
-            LOS = obj.ChannelModel.HasLOSCluster;
+%             LOS = obj.ChannelModel.HasLOSCluster;
             
             %Calculate new gNB position in wrap-around mode
             [~,gNBPos] = obj.Node.DistanceCalculatorFcn(gNBPos,UEPos);
             
+            % Calculate pathloss
+            YUF = YusUtilityFunctions;
+            % Construct the structure of the parameters for input for
+            % calculating pathloss
+            paramForPL.Scenario = obj.YusUtilityParameter.Scenario;
+            paramForPL.DLCarrierFreq = obj.ChannelModel.CarrierFrequency;
+            LinkDir = 0; % 0 for DL, 1 for UL
+            [pathloss, sigma_SF] = calculatePathloss(YUF, paramForPL, gNBPos, obj.YusUtilityParameter.UEStat, LinkDir);
+            pathloss = normrnd(pathloss,sigma_SF); % Add shadow fading to pathloss
+            %{
+            % The procedure for calculating pathloss is moved to
+            % YusUtilityFunctions.m
             %get distance and heights
             d_2D=norm(gNBPos(1:2)-UEPos(1:2));
             d_3D=norm(gNBPos(1:3)-UEPos(1:3));
@@ -1206,8 +1219,8 @@ classdef hNRUEPhy < hNRPhyInterface
                 otherwise
                     error('Scenarios other than RMa, UMi, UMa are yet to be implemented.');
             end
+            %}
             
-
             %MXC_1
             % Apply path loss on IQ samples
             scale = 10.^(-pathloss/20);

@@ -1,21 +1,29 @@
 classdef YusUtilityFunctions < handle
     %
     methods
+        function obj = YusUtilityFunctions( )
+            % Constructor
+        end
+        
         % Methods for calculating pathloss
-        function [Pathloss, sigma_SF]=calculatePathloss(param,gNBPos,UEPos,LOS,LinkDir)
+        function [Pathloss, sigma_SF]=calculatePathloss(obj, param, gNBPos, UEStat, LinkDir)
             %Calculate pathloss with formulas in Table 7.4.1-1 for each BS-UT link to be modelled
             %param - a structure containing the field Scenario
             %gNBPos - the Cartesian coordinates of a gNB, must be a 3-D column
             %vector
-            %UEPos - the Cartesion coordinates of a UE, must be a 3-D column vector
-            %LOS - 1 for LOS, 0 for NLOS.
+            %UEStat - a structure containing states of a UE
             %get the parameters in 3GPP TR 38.901 Figure7.4.1-1
 
+            % Parse UEStat
+            UEPos = UEStat.UEPosition;
+            LOS = UEStat.LOS;
+            
             %get distance and heights
             d_2D=norm(gNBPos(1:2)-UEPos(1:2));
             d_3D=norm(gNBPos(1:3)-UEPos(1:3));
             h_BS = gNBPos(3);
             h_UT=UEPos(3);
+            
 
             %constants
             if ~LinkDir %For DL
@@ -28,24 +36,51 @@ classdef YusUtilityFunctions < handle
             %select the function to calculate LOS probability
             switch param.Scenario
                 case 'UMi'
-                    h=@UMiPathloss;
+                    h=@obj.UMiPathloss;
                 case 'UMa'
-                    h=@UMaPathloss;
+                    h=@obj.UMaPathloss;
                 case 'RMa'
-                    h=@RMaPathloss;
+                    h=@obj.RMaPathloss;
                 otherwise
                     error('Scenarios other than RMa, UMi, UMa are yet to be implemented.');
             end
 
-            %calculate Pathloss
-
-            [Pathloss, sigma_SF]=h(d_2D,d_3D,h_BS,h_UT,f_c,LOS);
+            % Calculate Pathloss
+            % PL_b is the basic outdoor pathloss
+            [PL_b, sigma_SF]=h(d_2D,d_3D,h_BS,h_UT,f_c,LOS);
+            if ~UEStat.Indoor % UE is outdoor
+                PL_tw = 0; % No penetration loss for outdoor UEs
+                PL_in = 0; % No inside loss for outdoor UEs
+                if UEStat.InCar % UE is in a car
+                    % See TR 39.901 section 7.4.3.2 for μ and σ_P. 
+                    % Optionally, for metallized car windows, μ = 20 can be used.
+                    mu = 9;
+                    sigma_P = 5;
+                end
+            else % UE is indoor
+                % Material penetration losses, see TR 38.901 Table 7.4.3-1
+                L_glass = 2+0.2*f_c;
+                L_concrete = 5+4*f_c;
+                % O2I building penetration loss, see TR 38.901 Table
+                % 7.4.3-2
+                if UEStat.HighLoss % High penetration loss
+                    PL_tw = 5 - 10*log10(0.7*10^(-L_glass/10) + 0.3*10^(-L_concrete/10));
+                    sigma_P = 6.5;
+                else % Low penetration loss
+                    PL_tw = 5 - 10*log10(0.3*10^(-L_glass/10) + 0.7*10^(-L_concrete/10));
+                    sigma_P = 4.4;
+                end
+                PL_in = 0.5*UEStat.d2Din; % Inside loss
+            end
+            
+            Pathloss = PL_b + PL_tw + PL_in + UEStat.Indoor*normrnd(0,sigma_P) +...
+                (~UEStat.Indoor)*UEStat.InCar*normrnd(mu, sigma_P);
 
 
 
         end
 
-        function [Pathloss, sigma_SF]=UMiPathloss(d_2D,d_3D,h_BS,h_UT,f_c,LOS)
+        function [Pathloss, sigma_SF]=UMiPathloss(~, d_2D,d_3D,h_BS,h_UT,f_c,LOS)
             %see 3GPP TR 38.901 Table 7.4.1-1
 
             %generate coefficients
@@ -76,7 +111,7 @@ classdef YusUtilityFunctions < handle
             end
         end
 
-        function [Pathloss, sigma_SF]=UMaPathloss(d_2D,d_3D,h_BS,h_UT,f_c,LOS)
+        function [Pathloss, sigma_SF]=UMaPathloss(~, d_2D,d_3D,h_BS,h_UT,f_c,LOS)
             %see 3GPP TR 38.901 Table 7.4.1-1
 
             %generate coefficients
@@ -107,7 +142,7 @@ classdef YusUtilityFunctions < handle
             end
         end
 
-        function [Pathloss, sigma_SF]=RMaPathloss(d_2D,d_3D,h_BS,h_UT,f_c,LOS)
+        function [Pathloss, sigma_SF]=RMaPathloss(~, d_2D,d_3D,h_BS,h_UT,f_c,LOS)
             %see 3GPP TR 38.901 Table 7.4.1-1
 
             %generate coefficients
