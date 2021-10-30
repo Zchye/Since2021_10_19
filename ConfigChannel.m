@@ -4,7 +4,7 @@ function CHParam = ConfigChannel(param, LinkDir, siteIdx, UEInfo)
     % of properties of class nrCDLChannel.m
     % param - Parameters throughout the whole simulation
     % LinkDir    -   Link direction. 0 for DL, 1 for UL
-    % UEInfo - Could be the structure of states of a UE or the position of 
+    % UEInfo - Could be the structure of states of a UE or the RNTI of 
     % a UE. This flexibility is for heatmap mode.
     
     %Select proper part of the Table 7.5-6 according to the scenario
@@ -25,30 +25,20 @@ function CHParam = ConfigChannel(param, LinkDir, siteIdx, UEInfo)
     
     %Parse UEInfo
     switch class(UEInfo)
-        case 'struct' % UEInfo is an structure of states
-            UEInfoType = 'States';
+        case 'struct' % UEInfo is a structure of states
+%             UEInfoType = 'States';
             UEStat = UEInfo;
-        case 'double' % UEInfo is a 3-D position
-            UEInfoType = 'Position';
-            UEPos = UEInfo;
+        case 'double' % UEInfo is an RNTI
+%             UEInfoType = 'RNTI';
+            UEStat = param.UEStates{siteIdx,UEInfo};
     end
     
     %MXC_1 
     if LinkDir == 0 % DL
         TxPos = param.GNBPositions(siteIdx,:);
-        switch UEInfoType
-            case 'States'
-                RxPos = UEInfo.UEPositions;
-            case 'Position'
-                RxPos = UEPos;
-        end
+        RxPos = UEStat.UEPosition;
     else % UL
-        switch UEInfoType
-            case 'States'
-                TxPos = UEInfo.UEPositions;
-            case 'Position'
-                TxPos = UEPos;
-        end
+        TxPos = UEStat.UEPosition;
         RxPos = param.GNBPositions(siteIdx,:);
     end
     LOSAngles = getLOSAngles(TxPos,RxPos);
