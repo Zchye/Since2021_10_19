@@ -377,6 +377,12 @@ classdef hNRGNBPhy < hNRPhyInterface
                         channel.ReceiveArrayOrientation = [CHParam.bearing; CHParam.downtilt; CHParam.slant];
                         %MXC_2
                         
+                        % UE Mobility
+                        c = physconst('lightspeed'); % speed of light in m/s
+                        fd = param.UEStates{obj.siteIdx,ueIdx}.Speed/c*param.ULCarrierFreq; % UE max Doppler frequency in Hz
+                        obj.ChannelModel.MaximumDopplerShift = fd;
+                        obj.ChannelModel.UTDirectionOfTravel = [param.UEStates{obj.siteIdx,ueIdx}.DirectionOfTravel; 90];
+                        
                         channel.SampleRate = waveformInfo.SampleRate;
                         chInfo = info(channel);
                         obj.ChannelModel{ueIdx} = channel;

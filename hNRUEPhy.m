@@ -483,6 +483,11 @@ classdef hNRUEPhy < hNRPhyInterface
                     obj.ChannelModel.ReceiveAntennaArray.PolarizationModel = param.UEAntPolarizationModel;
                     obj.ChannelModel.ReceiveArrayOrientation = [0; 0; 0];
                     
+                    % UE Mobility
+                    c = physconst('lightspeed'); % speed of light in m/s
+                    fd = param.UEStates{obj.siteIdx,obj.RNTI}.Speed/c*param.DLCarrierFreq; % UE max Doppler frequency in Hz
+                    obj.ChannelModel.MaximumDopplerShift = fd;
+                    obj.ChannelModel.UTDirectionOfTravel = [param.UEStates{obj.siteIdx,obj.RNTI}.DirectionOfTravel; 90];
                     %MXC_2
                     
                     obj.ChannelModel.SampleRate = waveformInfo.SampleRate;
