@@ -380,8 +380,8 @@ classdef hNRGNBPhy < hNRPhyInterface
                         % UE Mobility
                         c = physconst('lightspeed'); % speed of light in m/s
                         fd = param.UEStates{obj.siteIdx,ueIdx}.Speed/c*param.ULCarrierFreq; % UE max Doppler frequency in Hz
-                        obj.ChannelModel.MaximumDopplerShift = fd;
-                        obj.ChannelModel.UTDirectionOfTravel = [param.UEStates{obj.siteIdx,ueIdx}.DirectionOfTravel; 90];
+                        channel.MaximumDopplerShift = fd;
+                        channel.UTDirectionOfTravel = [param.UEStates{obj.siteIdx,ueIdx}.DirectionOfTravel; 90];
                         
                         channel.SampleRate = waveformInfo.SampleRate;
                         chInfo = info(channel);

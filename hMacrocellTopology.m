@@ -177,13 +177,13 @@ UE_states = cell(numGNBs,param.NumUEsCell);
 for gNBIdx = 1:numGNBs
     for ueIdx = 1:param.NumUEsCell
         %generate states structure
-        states = [];
+        states = struct('UEPosition','0','LOS','0','Indoor','0','HighLoss','0','InCar','0','Speed','0','d2Din','0','DirectionOfTravel','0');
         
         %fill in position
-        states.UEPositions = ueCoordinates{gNBIdx, 1}(ueIdx, :);
+        states.UEPosition = ueCoordinates{gNBIdx, 1}(ueIdx, :);
         
         %generate LOS 
-        states.LOS = assignLOS(param,gNBCoordinates(gNBIdx,1:3),states.UEPositions);
+        states.LOS = assignLOS(param,gNBCoordinates(gNBIdx,1:3),states.UEPosition);
         
         %generate other states
         switch param.Scenario
@@ -219,8 +219,6 @@ for gNBIdx = 1:numGNBs
                 states.HighLoss = binornd(1,0.2);
                 %generate speed 
                 states.Speed = 0.83; %m/s
-                %generate direction of travel
-                states.DirectionOfTravel = 360*rand;
                 %generate d_2D-in for indoor UEs
                 states.d2Din = min(25*rand(2,1));
             else%outdoor
@@ -229,8 +227,6 @@ for gNBIdx = 1:numGNBs
                 states.InCar = 1;
                 %generate speed 
                 states.Speed = 8.33; %m/s
-                %generate direction of travel
-                states.DirectionOfTravel = 360*rand;
             end
             
         case 'UMa'
