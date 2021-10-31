@@ -22,7 +22,7 @@ rng('default'); % Reset the random number generator
 simParameters = []; % Clear the simParameters variable
 
 % simulation configuration
-simParameters.NumFramesSim = 5; % Simulation time, in number of 10 ms frames
+simParameters.NumFramesSim = 0.5; % Simulation time, in number of 10 ms frames
 simParameters.EnableWrapAround = true; % Enable wrap-around modeling
 simParameters.Scenario='RMa'; %UMi, UMa or RMa
 simParameters.ScenarioConfiguration = 'A'; % A, B
@@ -140,7 +140,7 @@ switch simParameters.Scenario
                 
                 
                 % UE configuration
-                simParameters.NumUEsCell = 10; % Number of UEs in each cell
+                simParameters.NumUEsCell = 1; % Number of UEs in each cell
                 simParameters.UEHeight = 1.5; % meters
                 simParameters.UETxPower = 23; % Tx power for all the UEs in dBm
                 simParameters.UETxAnts = 1;

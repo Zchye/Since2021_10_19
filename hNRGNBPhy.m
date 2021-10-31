@@ -220,6 +220,8 @@ classdef hNRGNBPhy < hNRPhyInterface
             obj.YusUtilityParameter.Scenario = param.Scenario;
             %MXC_1
             
+            obj.YusUtilityParameter.UEStat = param.UEStates;
+            
             % Create DL-SCH encoder system objects for the UEs
             obj.DLSCHEncoders = cell(param.NumUEs, 1);
             for i=1:param.NumUEs

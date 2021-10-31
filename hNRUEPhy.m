@@ -258,7 +258,7 @@ classdef hNRUEPhy < hNRPhyInterface
             obj.YusUtilityParameter.Scenario = param.Scenario;
             %MXC_1
             
-            obj.YusUtilityParameter.UEStat = param.UEStat{siteIdx, rnti};
+            obj.YusUtilityParameter.UEStat = param.UEStates{siteIdx, rnti};
             
             % Create UL-SCH encoder system object
             ulschEncoder = nrULSCH;
