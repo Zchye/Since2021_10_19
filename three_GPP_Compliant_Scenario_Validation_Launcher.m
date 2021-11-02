@@ -547,7 +547,7 @@ SINR_plotting_trail(YUO);
 %MXC_2
 disp('simulation complete');
 elapsed_time=toc;
-lineToPrint = ['Elapsed time: ', datestr(datenum(0,0,0,0,0,elapsed_time),'HH:MM:SS')];
+lineToPrint = ['Elapsed time: ', datestr(datenum(0,0,0,0,0,elapsed_time),'dd:HH:MM:SS')];
 disp(lineToPrint);
 %MXC_2
 
