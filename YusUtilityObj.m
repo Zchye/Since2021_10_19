@@ -4,6 +4,9 @@ classdef YusUtilityObj < handle
         %Stores the structure CQIInfo per slot per gNB per UE
         CQIInfoSet
         
+        % Stores the SINR's computed from DMRS in linear scale
+        DMRSSINR
+        
         %The triple (slotNum,siteIdx,ueIdx) identifies a CQIInfo
         Triple = cell(3,1);
     end
@@ -14,7 +17,8 @@ classdef YusUtilityObj < handle
             d2 = param.NumSitesPerCluster;
             %MXC_2
             d3 = param.NumUEsCell;
-            obj.CQIInfoSet = cell(d1,d2,d3);            
+            obj.CQIInfoSet = cell(d1,d2,d3);
+            obj.DMRSSINR = cell(d1,d2,d3);
         end
         
         function pushSlotNum(obj,slotNum)
@@ -41,16 +45,24 @@ classdef YusUtilityObj < handle
         
         function storeCQIInfo(obj,cqiInfo)
             %Push the cqiInfo returned by hCQISelect into the Triple           
-            if ~all(cellfun(@isempty,obj.Triple)==0)
-                %Throw an error if there are still emtpy cells in the
-                %Triple
-                error('Triple is not ready for being stored in CQIInfoSet');
-            end
+%             if ~all(cellfun(@isempty,obj.Triple)==0)
+%                 %Throw an error if there are still emtpy cells in the
+%                 %Triple
+%                 error('Triple is not ready for being stored in CQIInfoSet');
+%             end
             
             idx = cellfun(@(x) x, obj.Triple); % Cast the cell array Triple to a number array
             obj.CQIInfoSet{idx(1),idx(2),idx(3)} = cqiInfo;
             
-            obj.Triple = cell(3,1);
+%             obj.Triple = cell(3,1);
+        end
+        
+        function storeDMRSSINR(obj, SINR)
+            % Stores the SINR's computed from DMRS in linear scale in
+            % DMRSSINR
+            
+            idx = cellfun(@(x) x, obj.Triple); % Cast the cell array Triple to a number array
+            obj.DMRSSINR{idx(1),idx(2),idx(3)} = SINR;
         end
     end
 end

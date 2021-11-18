@@ -337,6 +337,7 @@ for siteIdx = 1:simParameters.NumSitesPerCluster
         UEs{siteIdx, ueIdx} = hNRUE(simParameters, ueIdx);
         UEs{siteIdx, ueIdx}.PhyEntity = hNRUEPhy(simParameters, siteIdx, ueIdx); % Create PHY layer instance
         UEs{siteIdx, ueIdx}.PhyEntity.StoreCQIInfo = @YUO.storeCQIInfo; % Register the callback to YusUtilityObj
+        UEs{siteIdx, ueIdx}.PhyEntity.YusUtilityParameter.YUO = YUO;    % Store handle of YUO in UE PHY
         configurePhy(UEs{siteIdx, ueIdx}, simParameters); % Configure PHY layer
         % Register distance calculator for wrap-around distance computations
         UEs{siteIdx, ueIdx}.DistanceCalculatorFcn =  distCalc;

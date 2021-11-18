@@ -1010,6 +1010,17 @@ classdef hNRUEPhy < hNRPhyInterface
                 csi{cwIdx} = repmat(csi{cwIdx}.',Qm,1);   % expand by each bit per symbol
                 dlschLLRs{cwIdx} = dlschLLRs{cwIdx} .* csi{cwIdx}(:);   % scale
                 
+                %YXC begin
+                % Store SINR calculated from DMRS in YUO
+                L_csi = length(csi);
+                mean_csi = zeros(L_csi,1);
+                for ii = 1:L_csi
+                    mean_csi(ii) = mean(csi{ii}(:));
+                end
+                DMRSSINR = mean(mean_csi)/noiseEst-1;   % SINR in linear scale
+                obj.YusUtilityParameter.YUO.storeDMRSSINR(DMRSSINR);
+                %YXC end
+                
                 [decbits, crcFlag] = obj.DLSCHDecoder(dlschLLRs, pdschInfo.PDSCHConfig.Modulation, ...
                     pdschInfo.PDSCHConfig.NumLayers, pdschInfo.RV, pdschInfo.HARQID);
                 
