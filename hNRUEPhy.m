@@ -186,8 +186,11 @@ classdef hNRUEPhy < hNRPhyInterface
         %MXC_1
         siteIdx
         
-        YusUtilityParameter
+        %YXC begin
+        % Yuxiao has moved this property to public properties
+%         YusUtilityParameter
         %MXC_1
+        %YXC end
     end
     
     %YXC begin
@@ -195,6 +198,8 @@ classdef hNRUEPhy < hNRPhyInterface
         %StoreCQIInfo stores the callback to the YusUtilityObj for storing
         %CQIInfo returned by the function hCQISelect in runtime
         StoreCQIInfo
+        
+        YusUtilityParameter
     end
     %YXC end
     
