@@ -140,7 +140,7 @@ switch simParameters.Scenario
                 
                 
                 % UE configuration
-                simParameters.NumUEsCell = 10; % Number of UEs in each cell
+                simParameters.NumUEsCell = 1; % Number of UEs in each cell
                 simParameters.UEHeight = 1.5; % meters
                 simParameters.UETxPower = 23; % Tx power for all the UEs in dBm
                 simParameters.UETxAnts = 1;
