@@ -65,8 +65,8 @@ for i = 1:numSites
                 UE_Wideband_SINR_counter(i,j) = UE_Wideband_SINR_counter(i,j) + 1;
             end
             %YXC begin
-            if ~isempty(DMRSSINR_raw{i,j,k})
-                DMRSSINR(i,j,k) = DMRSSINR_raw{i,j,k};
+            if ~isempty(DMRSSINR_raw{k,i,j})
+                DMRSSINR(i,j,k) = DMRSSINR_raw{k,i,j};
                 DMRSSINR_counter(i,j) = DMRSSINR_counter(i,j)+1;
             end
             %YXC end
@@ -101,13 +101,16 @@ plot(x, f);
 title('SINR CDF','FontSize',12);
 xlabel('UE Average SINR [dB]','FontSize',12);
 ylabel('C.D.F','FontSize',12);
+hold on
+plot(x_dmrs,f_dmrs)
+legend('CIS-RS','DMRS')
 
 %YXC begin
-figure('name','CDF UEs DL DMRS SINR [dB]')
-plot(f_dmrs,x_dmrs)
-title('DMRS SINR CDF','FontSize',12)
-xlabel('UE Average DMRS SINR [dB]','FontSize',12)
-ylabel('C.D.F','FontSize',12)
+% figure('name','CDF UEs DL DMRS SINR [dB]')
+% plot(x_dmrs,f_dmrs)
+% title('DMRS SINR CDF','FontSize',12)
+% xlabel('UE Average DMRS SINR [dB]','FontSize',12)
+% ylabel('C.D.F','FontSize',12)
 %YXC end
 end
 
