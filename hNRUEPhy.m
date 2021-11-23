@@ -1016,7 +1016,7 @@ classdef hNRUEPhy < hNRPhyInterface
                 dlschLLRs{cwIdx} = dlschLLRs{cwIdx} .* csi{cwIdx}(:);   % scale
                 
                 %YXC begin
-                % Store SINR calculated from DMRS in YUO
+                % Store SINR in YUO based on DMRS 
                 L_csi = length(csi);
                 mean_csi = zeros(L_csi,1);
                 for ii = 1:L_csi
