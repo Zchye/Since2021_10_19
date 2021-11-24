@@ -420,7 +420,7 @@ classdef hNRUEPhy < hNRPhyInterface
             if isfield(param, 'ChannelModelType')
                 if strcmpi(param.ChannelModelType, 'CDL')
                     %MXC_1
-                    %{
+                    
                     obj.ChannelModel = nrCDLChannel; % CDL channel object
                     obj.ChannelModel.DelayProfile = 'CDL-C';
                     obj.ChannelModel.DelaySpread = 300e-9;
@@ -432,13 +432,30 @@ classdef hNRUEPhy < hNRPhyInterface
                     %    - P is the number of polarizations (1 or 2).
                     %    - Mg and Ng are the number of row and column
                     %      array panels, respectively.
+                    %{
                     obj.ChannelModel.TransmitAntennaArray.Size = gNBTxAntPanel;
                     obj.ChannelModel.ReceiveAntennaArray.Size = obj.RxAntPanel;
+                    %}
+                    %YXC begin
+                    % Test BLER when channel is CDL-C
+                    %Create CHParam in case needed later
+                    LinkDir = 0; % DL
+                    CHParam = ConfigChannel(param, LinkDir, obj.siteIdx, obj.RNTI);
+                    %gNB Antenna Config
+                    obj.ChannelModel.TransmitAntennaArray.Size = param.GNBTxAntPanelSize;
+                    obj.ChannelModel.TransmitAntennaArray.ElementSpacing = param.GNBTxAntElementSpacing;
+                    obj.ChannelModel.TransmitAntennaArray.PolarizationAngles = param.GNBTxAntPolarizationAngles;
+                    obj.ChannelModel.TransmitAntennaArray.Element = param.GNBAntElement;
+                    obj.ChannelModel.TransmitAntennaArray.PolarizationModel = param.GNBAntPolarizationModel;
+                    obj.ChannelModel.TransmitArrayOrientation = [CHParam.bearing; CHParam.downtilt; CHParam.slant];
                     obj.ChannelModel.SampleRate = waveformInfo.SampleRate;
                     chInfo = info(obj.ChannelModel);
+                    %YXC end
                     % Update the maximum delay caused due to CDL channel model
                     obj.MaxChannelDelay = ceil(max(chInfo.PathDelays*obj.ChannelModel.SampleRate)) + chInfo.ChannelFilterDelay;
-                    %}
+                    
+                    
+                    %{
                     obj.ChannelModel = nrCDLChannel; % CDL channel object
                     obj.ChannelModel.DelayProfile = 'Custom';
                     
