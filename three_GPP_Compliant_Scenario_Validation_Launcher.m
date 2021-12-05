@@ -129,7 +129,9 @@ switch simParameters.Scenario
                 simParameters.GNBRxGain = 8; % Receiver antenna gain at gNB in dBi
                 simParameters.GNBTxAnts = 64;
                 simParameters.GNBRxAnts = 1;
-                simParameters.GNBTxAntPanelSize = [8 4 2 1 1]; %[M N P Mg Ng]
+                %YXC begin
+                simParameters.GNBTxAntPanelSize = [1 4 2 1 1]; %[M N P Mg Ng]
+                %YXC end
                 simParameters.GNBRxAntPanelSize = [1 1 1 1 1]; %[M N P Mg Ng]
                 simParameters.GNBTxAntElementSpacing = [0.5 0.8 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
                 simParameters.GNBRxAntElementSpacing = [0.5 0.8 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
