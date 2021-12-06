@@ -441,6 +441,8 @@ classdef hNRUEPhy < hNRPhyInterface
                     %Create CHParam in case needed later
                     LinkDir = 0; % DL
                     CHParam = ConfigChannel(param, LinkDir, obj.siteIdx, obj.RNTI);
+                    obj.TxAntPanel = param.UETxAntPanelSize;
+                    obj.RxAntPanel = param.UERxAntPanelSize;
                     %gNB Antenna Config
                     obj.ChannelModel.TransmitAntennaArray.Size = param.GNBTxAntPanelSize;
                     obj.ChannelModel.TransmitAntennaArray.ElementSpacing = param.GNBTxAntElementSpacing;
@@ -450,6 +452,13 @@ classdef hNRUEPhy < hNRPhyInterface
                     obj.ChannelModel.TransmitArrayOrientation = [CHParam.bearing; CHParam.downtilt; CHParam.slant];
                     obj.ChannelModel.SampleRate = waveformInfo.SampleRate;
                     chInfo = info(obj.ChannelModel);
+                    %UE Antenna Config
+                    obj.ChannelModel.ReceiveAntennaArray.Size = obj.RxAntPanel;
+                    obj.ChannelModel.ReceiveAntennaArray.ElementSpacing = param.UERxAntElementSpacing;
+                    obj.ChannelModel.ReceiveAntennaArray.PolarizationAngles = param.UERxAntPolarizationAngles;
+                    obj.ChannelModel.ReceiveAntennaArray.Element = param.UEAntElement;
+                    obj.ChannelModel.ReceiveAntennaArray.PolarizationModel = param.UEAntPolarizationModel;
+                    obj.ChannelModel.ReceiveArrayOrientation = [0; 0; 0];
                     %YXC end
                     % Update the maximum delay caused due to CDL channel model
                     obj.MaxChannelDelay = ceil(max(chInfo.PathDelays*obj.ChannelModel.SampleRate)) + chInfo.ChannelFilterDelay;
