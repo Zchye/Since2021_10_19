@@ -127,10 +127,10 @@ switch simParameters.Scenario
                 simParameters.AntennaSlant = 0; % degrees
                 simParameters.GNBTxPower = 46; % Tx power for gNBs in dBm
                 simParameters.GNBRxGain = 8; % Receiver antenna gain at gNB in dBi
-                simParameters.GNBTxAnts = 1;
+                simParameters.GNBTxAnts = 8;
                 simParameters.GNBRxAnts = 1;
                 %YXC begin
-                simParameters.GNBTxAntPanelSize = [1 1 1 1 1]; %[M N P Mg Ng]
+                simParameters.GNBTxAntPanelSize = [2 2 2 1 1]; %[M N P Mg Ng]
                 %YXC end
                 simParameters.GNBRxAntPanelSize = [1 1 1 1 1]; %[M N P Mg Ng]
                 simParameters.GNBTxAntElementSpacing = [0.5 0.8 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
@@ -146,9 +146,9 @@ switch simParameters.Scenario
                 simParameters.UEHeight = 1.5; % meters
                 simParameters.UETxPower = 23; % Tx power for all the UEs in dBm
                 simParameters.UETxAnts = 1;
-                simParameters.UERxAnts = 1;%2;
+                simParameters.UERxAnts = 2;
                 simParameters.UETxAntPanelSize = [1 1 1 1 1];
-                simParameters.UERxAntPanelSize = [1 1 1 1 1];%[1 1 2 1 1]; %[M N P Mg Ng]
+                simParameters.UERxAntPanelSize = [1 1 2 1 1]; %[M N P Mg Ng]
                 simParameters.UETxAntElementSpacing = [0.5 0.5 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
                 simParameters.UERxAntElementSpacing = [0.5 0.5 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
                 simParameters.UETxAntPolarizationAngles = 0;
@@ -249,22 +249,22 @@ simParameters.CodebookMode = 1; % 1 or 2
 simParameters.RankIndicator = 2; 
 %}
 % Copied from https://www.sharetechnote.com/html/lte_toolbox/Matlab_LteToolbox_5G_CSI_RS.html#Example_p8_Ex01
-%{
+
 simParameters.CSIRSRowNumber = 6; 
 simParameters.CSIRSSubcarrierLocation = [2 4 6 8];
 simParameters.CSIRSSymbolLocation = 3;
 simParameters.CSIRSPeriod = [40 1];
 simParameters.PMIMode = 'Subband';
 simParameters.CQIMode = 'Subband';
-simParameters.PanelDimensions = [4 1]; % Prompt error if [1 4]
+simParameters.PanelDimensions = [2 2]; % This is different from the one shown in the URL
 simParameters.SubbandSize = 4;
 simParameters.CodebookMode = 1;
 simParameters.RankIndicator = 2; 
-%}
+
 % Change DL to SISO for testing
 % Configuration copied from the original example
-simParameters.CSIRSRowNumber = 2; % Possible row numbers for single transmit antenna case are 1 and 2
-simParameters.SubbandSize = 8; % Size of sub-band for CQI reporting in terms of number of RBs
+% simParameters.CSIRSRowNumber = 2; % Possible row numbers for single transmit antenna case are 1 and 2
+% simParameters.SubbandSize = 8; % Size of sub-band for CQI reporting in terms of number of RBs
 % simParameters.PanelDimensions = [1,1];
 %YXC end
 %MXC_2 end
@@ -408,7 +408,7 @@ end
 % Set up logging and visualization, specifying the central cell (cell 0) and the cell of interest.
 %MXC_2
 %cellsOfInterest = unique([0; simParameters.CellOfInterest]);
-cellsOfInterest = [0; 1; 2];
+cellsOfInterest = (0:56)';%[0; 1; 2];
 numCellsOfInterest = length(cellsOfInterest); % Number of cells that the example logs and visualizes
 
 % Visualize the network topology
