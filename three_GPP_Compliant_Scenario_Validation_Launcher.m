@@ -127,7 +127,7 @@ switch simParameters.Scenario
                 simParameters.AntennaSlant = 0; % degrees
                 simParameters.GNBTxPower = 46; % Tx power for gNBs in dBm
                 simParameters.GNBRxGain = 8; % Receiver antenna gain at gNB in dBi
-                simParameters.GNBTxAnts = 64;
+                simParameters.GNBTxAnts = 1;
                 simParameters.GNBRxAnts = 1;
                 %YXC begin
                 simParameters.GNBTxAntPanelSize = [1 1 1 1 1]; %[M N P Mg Ng]
@@ -146,9 +146,9 @@ switch simParameters.Scenario
                 simParameters.UEHeight = 1.5; % meters
                 simParameters.UETxPower = 23; % Tx power for all the UEs in dBm
                 simParameters.UETxAnts = 1;
-                simParameters.UERxAnts = 2;
+                simParameters.UERxAnts = 1;%2;
                 simParameters.UETxAntPanelSize = [1 1 1 1 1];
-                simParameters.UERxAntPanelSize = [1 1 2 1 1]; %[M N P Mg Ng]
+                simParameters.UERxAntPanelSize = [1 1 1 1 1];%[1 1 2 1 1]; %[M N P Mg Ng]
                 simParameters.UETxAntElementSpacing = [0.5 0.5 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
                 simParameters.UERxAntElementSpacing = [0.5 0.5 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
                 simParameters.UETxAntPolarizationAngles = 0;
@@ -265,7 +265,7 @@ simParameters.RankIndicator = 2;
 % Configuration copied from the original example
 simParameters.CSIRSRowNumber = 2; % Possible row numbers for single transmit antenna case are 1 and 2
 simParameters.SubbandSize = 8; % Size of sub-band for CQI reporting in terms of number of RBs
-simParameters.PanelDimensions = [1,1];
+% simParameters.PanelDimensions = [1,1];
 %YXC end
 %MXC_2 end
 
