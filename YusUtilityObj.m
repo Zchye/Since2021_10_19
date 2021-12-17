@@ -94,6 +94,6 @@ classdef YusUtilityObj < handle
              YUO.DMRSSINR = obj.DMRSSINR;
             YUO.Throughput = obj.Throughput;
              save('outputYUO.mat','YUO')
-         end
+        end
     end
 end
