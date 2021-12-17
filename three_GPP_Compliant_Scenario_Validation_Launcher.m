@@ -593,7 +593,7 @@ for siteIdx = 1:numCellsOfInterest
 end
 save(simParameters.ParametersLogFile, 'simParameters'); % Save simulation parameters in a MAT-file
 save(simParameters.SimulationLogFile, 'simulationLogs'); % Save simulation logs in a MAT-file
-
+SaveFile(YUO); % Save data in YUO in a MAT-file
 %MXC_2
 SINR_plotting_trail(YUO);
 

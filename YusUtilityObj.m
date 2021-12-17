@@ -64,5 +64,12 @@ classdef YusUtilityObj < handle
             idx = cellfun(@(x) x, obj.Triple); % Cast the cell array Triple to a number array
             obj.DMRSSINR{idx(1),idx(2),idx(3)} = SINR;
         end
+        
+        function SaveFile(obj)
+            % Save the simulation data
+            YUO.CQIInfoSet = obj.CQIInfoSet;
+            YUO.DMRSSINR = obj.DMRSSINR;
+            save('outputYUO.mat','YUO')
+        end
     end
 end
