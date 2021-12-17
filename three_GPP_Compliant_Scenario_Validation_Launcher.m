@@ -599,10 +599,10 @@ end
 save(simParameters.ParametersLogFile, 'simParameters'); % Save simulation parameters in a MAT-file
 save(simParameters.SimulationLogFile, 'simulationLogs'); % Save simulation logs in a MAT-file
 %YXC begin
-SaveFile(YUO);
+SaveFile(YUO); % Save data in YUO in a MAT-file
 %YXC end
 %MXC_2
-SINR_plotting_trail(YUO); % Save data in YUO in a MAT-file
+SINR_plotting_trail(YUO); 
 %YXC begin
 plotThroughputCDF(YUO,'DL');
 %YXC end
