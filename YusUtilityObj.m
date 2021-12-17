@@ -92,7 +92,7 @@ classdef YusUtilityObj < handle
              % Save the simulation data
              YUO.CQIInfoSet = obj.CQIInfoSet;
              YUO.DMRSSINR = obj.DMRSSINR;
-            YUO.Throughput = obj.Throughput;
+             YUO.Throughput = obj.Throughput;
              save('outputYUO.mat','YUO')
         end
     end
