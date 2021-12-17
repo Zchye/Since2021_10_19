@@ -103,7 +103,7 @@ xlabel('UE Average SINR [dB]','FontSize',12);
 ylabel('C.D.F','FontSize',12);
 hold on
 plot(x_dmrs,f_dmrs)
-legend('CIS-RS','DMRS')
+legend('CSI-RS','DMRS')
 
 %YXC begin
 % figure('name','CDF UEs DL DMRS SINR [dB]')

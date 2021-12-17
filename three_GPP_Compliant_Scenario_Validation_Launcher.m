@@ -434,7 +434,12 @@ for siteIdx = 1:numCellsOfInterest
         visualizer{siteIdx} = hNRMetricsVisualizer(simParameters, 'MACLogger', simSchedulingLogger{siteIdx}, 'PhyLogger', simPhyLogger{siteIdx});
     end
 end
-
+%YXC begin
+ConfTime = toc;
+ConfTime = seconds(ConfTime);
+disp(['Time elapsed: ',datestr(ConfTime,'MM:SS')])
+disp('Configuration finished. Start processing loop.')
+%YXC end
 %% Processing Loop
 % Simulation is run slot by slot. For each cell, in each slot, these operations are executed:
 % *Run the MAC and PHY layers of gNB
@@ -451,7 +456,7 @@ for symbolNum = 1 : tickGranularity : numSymbolsSim
 
     %MXC_2
     %show which symbol is currently being run
-    fprintf('running slot # %d out of %d \n',(((symbolNum-1)/14)+1), numSlotsSim);
+    %fprintf('running slot # %d out of %d \n',(((symbolNum-1)/14)+1), numSlotsSim);
     %MXC_2
 
     if mod(symbolNum - 1, 14) == 0
@@ -469,6 +474,21 @@ for symbolNum = 1 : tickGranularity : numSymbolsSim
             pushTriple(YUO,slotNum,siteIdx,ueIdx);
             
             run(UEs{siteIdx, ueIdx});
+            %YXC begin
+            % Log simulation progress
+            Time = toc;
+            Time = seconds(Time);
+            LoopTime = Time - ConfTime;
+            Progress = ((symbolNum-1)/tickGranularity*simParameters.NumSitesPerCluster*...
+                simParameters.NumUEsCell+(siteIdx-1)*simParameters.NumUEsCell+ueIdx)/...
+                (numSlotsSim*simParameters.NumSitesPerCluster*simParameters.NumUEsCell);
+            TimeLeft = LoopTime/Progress + ConfTime - LoopTime;
+            disp(['Time elapsed: ',datestr(Time,'dd:HH:MM:SS'), '. Remaining time: ',datestr(TimeLeft,'dd:HH:MM:SS')])
+            disp(['Progress: ',num2str(floor(100*Progress)),'%. ',...
+                'Processed: UE(',num2str(ueIdx),'/',num2str(simParameters.NumUEsCell),') in ',...
+                'cell(',num2str(siteIdx),'/',num2str(simParameters.NumSitesPerCluster),') of ',...
+                'slot(',num2str(floor((symbolNum-1)/tickGranularity)+1),'/',num2str(numSlotsSim),').'])
+            %YXC end
         end
 
         cellIdx = find((siteIdx-1) == cellsOfInterest, 1);
@@ -523,9 +543,9 @@ for symbolNum = 1 : tickGranularity : numSymbolsSim
     %MXC_3
     
     
-    yuxtime = toc;
-    lineToPrint = ['Elapsed time: ', datestr(seconds(yuxtime),'dd:HH:MM:SS')];
-    disp(lineToPrint);
+    %yuxtime = toc;
+    %lineToPrint = ['Elapsed time: ', datestr(seconds(yuxtime),'dd:HH:MM:SS')];
+    %disp(lineToPrint);
 
 end
 
@@ -572,12 +592,17 @@ save(simParameters.SimulationLogFile, 'simulationLogs'); % Save simulation logs 
 SINR_plotting_trail(YUO);
 
 %MXC_2
-disp('simulation complete');
-elapsed_time=toc;
-lineToPrint = ['Elapsed time: ', datestr(datenum(0,0,0,0,0,elapsed_time),'dd:HH:MM:SS')];
-disp(lineToPrint);
+% disp('simulation complete');
+% elapsed_time=toc;
+% lineToPrint = ['Elapsed time: ', datestr(datenum(0,0,0,0,0,elapsed_time),'dd:HH:MM:SS')];
+% disp(lineToPrint);
 %MXC_2
 
+%YXC begin
+EndTime = toc;
+EndTime = seconds(EndTime);
+disp(['Simulation finished. Total time: ',datestr(EndTime,'dd:HH:MM:SS')])
+%YXC end
 
 
 
