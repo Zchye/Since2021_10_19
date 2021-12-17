@@ -53,7 +53,7 @@ switch simParameters.Scenario
                 simParameters.ULCarrierFreq = 4e9; % Hz
                 %see 3GPP TR37.910 Table 8.2.1-1 for detailed NR bands
                 %also found in Table 8.2.1-1 and 8.2.1-2 in TS38.104
-                simParameters.DuplexMode = 1; %0 - FDD; 1 - TDD
+                simParameters.DuplexMode = 0; %0 - FDD; 1 - TDD
                 
                 simParameters.InterSiteDistance = 200; % Distance between adjacent gNBs in meters
                 simParameters.minUEgNBDistance = 10;
