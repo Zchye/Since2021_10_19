@@ -63,8 +63,13 @@ numCellsPerCluster = 19;
 %}
 
 %position of 19 sites assuming hexagon with side length 1
-xSitePos = [0, 3*cosd(0:60:300), sqrt(27)*cosd(30:60:330), 6*cosd(0:60:300)];
-ySitePos = [0, 3*sind(0:60:300), sqrt(27)*sind(30:60:330), 6*sind(0:60:300)];
+%YXC begin
+% We only study the 3 sites at the centre
+% xSitePos = [0, 3*cosd(0:60:300), sqrt(27)*cosd(30:60:330), 6*cosd(0:60:300)];
+% ySitePos = [0, 3*sind(0:60:300), sqrt(27)*sind(30:60:330), 6*sind(0:60:300)];
+xSitePos = 0;
+ySitePos = 0;
+%YXC end
 
 %gNB locations, all three gNBs within a site are at the same location
 xGNBPos = repelem(xSitePos,3);
@@ -91,7 +96,9 @@ else
     error('did not implement wrap-around yet')
 end
 
-numCellsPerCluster = 57;
+%YXC begin
+numCellsPerCluster = 3;%57;
+%YXC end
 %MXC
 
 %YXC begin

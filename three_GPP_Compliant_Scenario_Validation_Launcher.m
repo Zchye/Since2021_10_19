@@ -22,8 +22,11 @@ rng('default'); % Reset the random number generator
 simParameters = []; % Clear the simParameters variable
 
 % simulation configuration
-simParameters.NumFramesSim = 0.3; % Simulation time, in number of 10 ms frames
-simParameters.EnableWrapAround = true; % Enable wrap-around modeling
+simParameters.NumFramesSim = 10; % Simulation time, in number of 10 ms frames
+%YXC begin
+% Disable wrap around when we study only the 3 cells at the centre
+simParameters.EnableWrapAround = false;%true; % Enable wrap-around modeling
+%XYC end
 simParameters.Scenario='RMa'; %UMi, UMa or RMa
 simParameters.ScenarioConfiguration = 'A'; % A, B
 simParameters.ChannelModelType = 'CDL';
@@ -218,7 +221,10 @@ dlPacketSize = 2e4 * ones(simParameters.NumUEsCell,1); % Size of generated DL pa
 
 
 simParameters.NumClusters = 1;
-simParameters.NumSitesPerCluster = 57; % Number of gNBs per cluster
+%YXC begin
+% We only study the 3 cells at the centre
+simParameters.NumSitesPerCluster = 3;%57; % Number of gNBs per cluster
+%YXC end
 
 % Set the UE and gNB positions.
 [simParameters.gNBBearing, simParameters.GNBPositions, simParameters.UEPositions, simParameters.CellPositions, simParameters.UEStates] = hMacrocellTopology(simParameters);
@@ -408,7 +414,7 @@ end
 % Set up logging and visualization, specifying the central cell (cell 0) and the cell of interest.
 %MXC_2
 %cellsOfInterest = unique([0; simParameters.CellOfInterest]);
-cellsOfInterest = (0:56)';%[0; 1; 2];
+cellsOfInterest = [0; 1; 2];
 numCellsOfInterest = length(cellsOfInterest); % Number of cells that the example logs and visualizes
 
 % Visualize the network topology
