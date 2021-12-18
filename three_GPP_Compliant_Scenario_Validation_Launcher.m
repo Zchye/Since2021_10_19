@@ -223,7 +223,7 @@ dlPacketSize = 2e4 * ones(simParameters.NumUEsCell,1); % Size of generated DL pa
 simParameters.NumClusters = 1;
 %YXC begin
 % We only study the 3 cells at the centre
-simParameters.NumSitesPerCluster = 3;%57; % Number of gNBs per cluster
+simParameters.NumSitesPerCluster = 1;%57; % Number of gNBs per cluster
 %YXC end
 
 % Set the UE and gNB positions.
@@ -320,7 +320,7 @@ else % Symbol-based scheduling
 end
 
 %% Multicell Setup
-% Set up the 57-cell topology.
+% Set up the 1-cell topology.
 % For each cell, create the gNB and UE objects, initialize the channel quality information for UEs, and set up the logical channel at gNB and UEs. 
 % The hNRGNB and hNRUE helper classes create gNB and UE nodes respectively, containing the RLC, MAC, and PHY layers.
 
@@ -414,7 +414,7 @@ end
 % Set up logging and visualization, specifying the central cell (cell 0) and the cell of interest.
 %MXC_2
 %cellsOfInterest = unique([0; simParameters.CellOfInterest]);
-cellsOfInterest = [0; 1; 2];
+cellsOfInterest = 0;%[0; 1; 2];
 numCellsOfInterest = length(cellsOfInterest); % Number of cells that the example logs and visualizes
 
 % Visualize the network topology
