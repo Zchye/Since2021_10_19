@@ -479,6 +479,10 @@ classdef hNRUEPhy < hNRPhyInterface
                     obj.ChannelModel.TransmitAntennaArray.Element = param.GNBAntElement;
                     obj.ChannelModel.TransmitAntennaArray.PolarizationModel = param.GNBAntPolarizationModel;
                     obj.ChannelModel.TransmitArrayOrientation = [CHParam.bearing; CHParam.downtilt; CHParam.slant];
+                    %YXC begin
+                    % Isotropic pattern
+                    obj.ChannelModel.TransmitAntennaArray.Elment = 'isotropic';
+                    %YXC end
                     
                     %UE Antenna Config
                     obj.ChannelModel.ReceiveAntennaArray.Size = obj.RxAntPanel;

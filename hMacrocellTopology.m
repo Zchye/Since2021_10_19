@@ -72,20 +72,27 @@ ySitePos = 0;
 %YXC end
 
 %gNB locations, all three gNBs within a site are at the same location
-xGNBPos = repelem(xSitePos,3);
-yGNBPos = repelem(ySitePos,3);
+%YXC begin
+% To simulate single cell
+% xGNBPos = repelem(xSitePos,3);
+% yGNBPos = repelem(ySitePos,3);
+xGNBPos = xSitePos;
+yGNBPos = ySitePos;
+%YXC end
 
 %since gNBs are on the edge of cells, need cell center for UE generation
 xCellPos = xGNBPos;
 yCellPos = yGNBPos;
 
-xCellPos(1:3:end) = xCellPos(1:3:end)+cosd(0);
-xCellPos(2:3:end) = xCellPos(2:3:end)+cosd(120);
-xCellPos(3:3:end) = xCellPos(3:3:end)+cosd(240);
-
-yCellPos(1:3:end) = yCellPos(1:3:end)+sind(0);
-yCellPos(2:3:end) = yCellPos(2:3:end)+sind(120);
-yCellPos(3:3:end) = yCellPos(3:3:end)+sind(240);
+%YXC begin
+% xCellPos(1:3:end) = xCellPos(1:3:end)+cosd(0);
+% xCellPos(2:3:end) = xCellPos(2:3:end)+cosd(120);
+% xCellPos(3:3:end) = xCellPos(3:3:end)+cosd(240);
+% 
+% yCellPos(1:3:end) = yCellPos(1:3:end)+sind(0);
+% yCellPos(2:3:end) = yCellPos(2:3:end)+sind(120);
+% yCellPos(3:3:end) = yCellPos(3:3:end)+sind(240);
+%YXC end
 
 % Minimum offset required in x and y directions to ensure positive
 % coordinates for all the vertices
@@ -97,14 +104,14 @@ else
 end
 
 %YXC begin
-numCellsPerCluster = 3;%57;
+numCellsPerCluster = 1;%57;
 %YXC end
 %MXC
 
 %YXC begin
 %Assign antenna bearing angles to each gNB.
-temp=[0;120;240];
-temp=repelem(temp,1,numCellsPerCluster/3);
+temp=0;%[0;120;240];
+% temp=repelem(temp,1,numCellsPerCluster/3);
 gNBBearing=temp(:);
 %YXC end
 
