@@ -9,6 +9,9 @@ classdef YusUtilityObj < handle
         
         %The triple (slotNum,siteIdx,ueIdx) identifies a CQIInfo
         Triple = cell(3,1);
+        
+        % Stores throughputs
+        Throughput
     end
     methods
         function obj = YusUtilityObj(param, numSlotsSim)
@@ -19,6 +22,12 @@ classdef YusUtilityObj < handle
             d3 = param.NumUEsCell;
             obj.CQIInfoSet = cell(d1,d2,d3);
             obj.DMRSSINR = cell(d1,d2,d3);
+            % obj. Throughput is a 4-dimensional array. The first index
+            % stores link direction, 1 for DL, 2 for UL. The second index
+            % stores UE indices and extra two item for cell throughput and
+            % theoretical peak throughput. The third index stores site
+            % indices. The fourth index stores slot numbers.
+            obj.Throughput = zeros(2, d3+2, d2, d1);
         end
         
         function pushSlotNum(obj,slotNum)
@@ -65,10 +74,16 @@ classdef YusUtilityObj < handle
             obj.DMRSSINR{idx(1),idx(2),idx(3)} = SINR;
         end
         
+        function storeThroughput(obj,throughputServed, siteIdx, slotNum)
+            % Stores throughput in obj.Throughput
+            obj.Throughput(:,:,siteIdx,slotNum) = throughputServed;
+        end
+        
         function SaveFile(obj)
             % Save the simulation data
             YUO.CQIInfoSet = obj.CQIInfoSet;
             YUO.DMRSSINR = obj.DMRSSINR;
+            YUO.Throughput = obj.Throughput;
             save('outputYUO.mat','YUO')
         end
     end
