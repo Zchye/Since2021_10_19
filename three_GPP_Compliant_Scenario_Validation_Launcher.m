@@ -426,7 +426,9 @@ for siteIdx = 1:numCellsOfInterest
     %comment out visualization code to speed up simulation
     
     if simParameters.EnableAllVisualization
-        visualizer{siteIdx} = hNRMetricsVisualizer(simParameters, 'MACLogger', simSchedulingLogger{siteIdx}, 'PhyLogger', simPhyLogger{siteIdx});
+        %YXC begin
+        visualizer{siteIdx} = hNRMetricsVisualizer(simParameters, 'MACLogger', simSchedulingLogger{siteIdx}, 'PhyLogger', simPhyLogger{siteIdx},'siteIdx',siteIdx,'YUO',YUO);
+        %YXC end
     end
 end
 %YXC begin
@@ -585,7 +587,9 @@ save(simParameters.SimulationLogFile, 'simulationLogs'); % Save simulation logs 
 SaveFile(YUO); % Save data in YUO in a MAT-file
 %MXC_2
 SINR_plotting_trail(YUO);
-
+%YXC begim
+plotThroughputCDF(YUO,'DL');
+%YXC end
 %MXC_2
 % disp('simulation complete');
 % elapsed_time=toc;
