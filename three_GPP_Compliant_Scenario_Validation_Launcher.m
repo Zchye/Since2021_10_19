@@ -127,10 +127,10 @@ switch simParameters.Scenario
                 simParameters.AntennaSlant = 0; % degrees
                 simParameters.GNBTxPower = 46; % Tx power for gNBs in dBm
                 simParameters.GNBRxGain = 8; % Receiver antenna gain at gNB in dBi
-                simParameters.GNBTxAnts = 16;
+                simParameters.GNBTxAnts = 32;
                 simParameters.GNBRxAnts = 1;
                 %YXC begin
-                simParameters.GNBTxAntPanelSize = [2 4 2 1 1]; %[M N P Mg Ng]
+                simParameters.GNBTxAntPanelSize = [4 4 2 1 1]; %[M N P Mg Ng]
                 %YXC end
                 simParameters.GNBRxAntPanelSize = [1 1 1 1 1]; %[M N P Mg Ng]
                 simParameters.GNBTxAntElementSpacing = [0.5 0.8 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
@@ -236,7 +236,7 @@ simParameters.SubbandSize = 8; % Size of sub-band for CQI reporting in terms of 
 %YXC begin
 % Temporarily make the number of antenna ports and the number of antenna
 % elements equal, as 5G Toolbox does not support flexible layer mapping
-
+%{
 simParameters.CSIRSRowNumber = 11; % CSI-RS row number as per 3GPP TS 38.211 Table 7.4.1.5.3-1
 simParameters.CSIRSSubcarrierLocation = [1 3 5 7];
 simParameters.CSIRSSymbolLocation = 0;
@@ -247,7 +247,7 @@ simParameters.PanelDimensions = [8 1]; % [N1 N2] as per 3GPP TS 38.214 Table 5.2
 simParameters.SubbandSize = 4; % Refer TS 38.214 Table 5.2.1.4-2 for valid subband sizes
 simParameters.CodebookMode = 1; % 1 or 2
 simParameters.RankIndicator = 2; 
-
+%}
 % Copied from https://www.sharetechnote.com/html/lte_toolbox/Matlab_LteToolbox_5G_CSI_RS.html#Example_p8_Ex01
 %{
 simParameters.CSIRSRowNumber = 6; 
@@ -261,6 +261,17 @@ simParameters.SubbandSize = 4;
 simParameters.CodebookMode = 1;
 simParameters.RankIndicator = 2; 
 %}
+% Copied from https://www.sharetechnote.com/html/lte_toolbox/Matlab_LteToolbox_5G_CSI_RS.html#Example_p32_Ex01
+simParameters.CSIRSRowNumber = 16;
+simParameters.CSIRSSubcarrierLocation = [2 4 6 8];
+simParameters.CSIRSSymbolLocation = [3,7];
+simParameters.CSIRSPeriod = [40 1];
+simParameters.PMIMode = 'Subband';
+simParameters.CQIMode = 'Subband';
+simParameters.PanelDimensions = [16 1];
+simParameters.SubbandSize = 4;
+simParameters.CodebookMode = 1;
+simParameters.RankIndicator = 2;
 %YXC end
 %MXC_2 end
 
