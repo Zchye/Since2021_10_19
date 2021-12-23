@@ -249,7 +249,6 @@ simParameters.CodebookMode = 1; % 1 or 2
 simParameters.RankIndicator = 2; 
 %}
 % Copied from https://www.sharetechnote.com/html/lte_toolbox/Matlab_LteToolbox_5G_CSI_RS.html#Example_p8_Ex01
-
 simParameters.CSIRSRowNumber = 6; 
 simParameters.CSIRSSubcarrierLocation = [2 4 6 8];
 simParameters.CSIRSSymbolLocation = 3;
@@ -260,12 +259,13 @@ simParameters.PanelDimensions = [2 2]; % This is different from the one shown in
 simParameters.SubbandSize = 4;
 simParameters.CodebookMode = 1;
 simParameters.RankIndicator = 2; 
-
+%{
 % Change DL to SISO for testing
 % Configuration copied from the original example
 % simParameters.CSIRSRowNumber = 2; % Possible row numbers for single transmit antenna case are 1 and 2
 % simParameters.SubbandSize = 8; % Size of sub-band for CQI reporting in terms of number of RBs
 % simParameters.PanelDimensions = [1,1];
+%}
 %YXC end
 %MXC_2 end
 
@@ -431,7 +431,9 @@ for siteIdx = 1:numCellsOfInterest
     %comment out visualization code to speed up simulation
     
     if simParameters.EnableAllVisualization
-        visualizer{siteIdx} = hNRMetricsVisualizer(simParameters, 'MACLogger', simSchedulingLogger{siteIdx}, 'PhyLogger', simPhyLogger{siteIdx});
+        %YXC begin
+        visualizer{siteIdx} = hNRMetricsVisualizer(simParameters, 'MACLogger', simSchedulingLogger{siteIdx}, 'PhyLogger', simPhyLogger{siteIdx},'siteIdx',siteIdx,'YUO',YUO);
+        %YXC end
     end
 end
 %YXC begin
@@ -587,11 +589,12 @@ for siteIdx = 1:numCellsOfInterest
 end
 save(simParameters.ParametersLogFile, 'simParameters'); % Save simulation parameters in a MAT-file
 save(simParameters.SimulationLogFile, 'simulationLogs'); % Save simulation logs in a MAT-file
-SaveFile(YUO);
-
+SaveFile(YUO); % Save data in YUO in a MAT-file
 %MXC_2
 SINR_plotting_trail(YUO);
-
+%YXC begim
+plotThroughputCDF(YUO,'DL');
+%YXC end
 %MXC_2
 % disp('simulation complete');
 % elapsed_time=toc;
