@@ -22,7 +22,7 @@ rng('default'); % Reset the random number generator
 simParameters = []; % Clear the simParameters variable
 
 % simulation configuration
-simParameters.NumFramesSim = 1; % Simulation time, in number of 10 ms frames
+simParameters.NumFramesSim = 2; % Simulation time, in number of 10 ms frames
 simParameters.EnableWrapAround = true; % Enable wrap-around modeling
 simParameters.Scenario='RMa'; %UMi, UMa or RMa
 simParameters.ScenarioConfiguration = 'A'; % A, B
@@ -127,10 +127,10 @@ switch simParameters.Scenario
                 simParameters.AntennaSlant = 0; % degrees
                 simParameters.GNBTxPower = 46; % Tx power for gNBs in dBm
                 simParameters.GNBRxGain = 8; % Receiver antenna gain at gNB in dBi
-                simParameters.GNBTxAnts = 8;
+                simParameters.GNBTxAnts = 16;
                 simParameters.GNBRxAnts = 1;
                 %YXC begin
-                simParameters.GNBTxAntPanelSize = [2 2 2 1 1]; %[M N P Mg Ng]
+                simParameters.GNBTxAntPanelSize = [2 4 2 1 1]; %[M N P Mg Ng]
                 %YXC end
                 simParameters.GNBRxAntPanelSize = [1 1 1 1 1]; %[M N P Mg Ng]
                 simParameters.GNBTxAntElementSpacing = [0.5 0.8 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
@@ -142,7 +142,7 @@ switch simParameters.Scenario
                 
                 
                 % UE configuration
-                simParameters.NumUEsCell = 2; % Number of UEs in each cell
+                simParameters.NumUEsCell = 10; % Number of UEs in each cell
                 simParameters.UEHeight = 1.5; % meters
                 simParameters.UETxPower = 23; % Tx power for all the UEs in dBm
                 simParameters.UETxAnts = 1;
