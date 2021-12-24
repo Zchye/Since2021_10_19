@@ -20,10 +20,11 @@ function popedGrid = AntVir(AntGrid, NumPorts, Sym, SymLinInd)
     for ii = 1:length(SymLinInd)
         for PortIdx = 1:NumPorts
             if PortSub3(ii) == PortIdx
-                % Populate a copy of one port to two adjacent
+                % Populate a copy of one port to adjacent
                 % antennas
-                popedGrid(PortSub1(ii), PortSub2(ii), 2*PortSub3(ii)-1) = NormSym(ii);
-                popedGrid(PortSub1(ii), PortSub2(ii), 2*PortSub3(ii)) = NormSym(ii);
+                for subp = 0:(NumAntSubArray-1)
+                    popedGrid(PortSub1(ii), PortSub2(ii), NumAntSubArray*PortSub3(ii) - subp) = NormSym(ii);
+                end
             end
         end
     end
