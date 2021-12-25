@@ -7,6 +7,8 @@ function popedGrid = AntVir(AntGrid, NumPorts, Sym, SymLinInd)
     
     NumAnt = size(AntGrid,3); % Number of antenna elements
     NumAntSubArray = NumAnt/NumPorts; % Number of antenna elements in a subarray
+    SymLinInd = SymLinInd(:)'; % Reshape the array of linear indices to a row vector
+    Sym = reshape(Sym, 1, []); % Reshape the array of symbols to a row vector
     
     % Convert 1-based linear indices to subscripts
     PortGridSize = [size(AntGrid,1,2), NumPorts]; % Size of antenna port resource grid
