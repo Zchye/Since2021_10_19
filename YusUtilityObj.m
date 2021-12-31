@@ -81,7 +81,7 @@ classdef YusUtilityObj < handle
             idx = cellfun(@(x) x, obj.Triple); % Cast the cell array Triple to a number array
             obj.DMRSSINR{idx(1),idx(2),idx(3)} = SINR;
         end
-
+        
         function storeThroughput(obj,throughputServed, siteIdx, slotNum)
             % Stores throughput in obj.Throughput
             d4Idx = slotNum/obj.MetricsStepSize;
