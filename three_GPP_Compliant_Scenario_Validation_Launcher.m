@@ -416,6 +416,9 @@ end
 %cellsOfInterest = unique([0; simParameters.CellOfInterest]);
 cellsOfInterest = [0; 1; 2];
 numCellsOfInterest = length(cellsOfInterest); % Number of cells that the example logs and visualizes
+%YXC begin
+YUO.cellOfInterestIdx = numCellsOfInterest;
+%YXC end
 
 % Visualize the network topology
 hTopologyVisualizer(simParameters);   
@@ -437,7 +440,9 @@ for siteIdx = 1:numCellsOfInterest
     %comment out visualization code to speed up simulation
     
     if simParameters.EnableAllVisualization
-        visualizer{siteIdx} = hNRMetricsVisualizer(simParameters, 'MACLogger', simSchedulingLogger{siteIdx}, 'PhyLogger', simPhyLogger{siteIdx});
+        %YXC begin
+        visualizer{siteIdx} = hNRMetricsVisualizer(simParameters, 'MACLogger', simSchedulingLogger{siteIdx}, 'PhyLogger', simPhyLogger{siteIdx},'siteIdx',siteIdx,'YUO',YUO);
+        %YXC end
     end
 end
 %YXC begin
@@ -593,10 +598,14 @@ for siteIdx = 1:numCellsOfInterest
 end
 save(simParameters.ParametersLogFile, 'simParameters'); % Save simulation parameters in a MAT-file
 save(simParameters.SimulationLogFile, 'simulationLogs'); % Save simulation logs in a MAT-file
-
+%YXC begin
+SaveFile(YUO);
+%YXC end
 %MXC_2
-SINR_plotting_trail(YUO);
-
+SINR_plotting_trail(YUO); % Save data in YUO in a MAT-file
+%YXC begin
+plotThroughputCDF(YUO,'DL');
+%YXC end
 %MXC_2
 % disp('simulation complete');
 % elapsed_time=toc;
