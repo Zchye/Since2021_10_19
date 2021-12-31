@@ -405,6 +405,9 @@ end
 %cellsOfInterest = unique([0; simParameters.CellOfInterest]);
 cellsOfInterest = (0:56)';%[0; 1; 2];
 numCellsOfInterest = length(cellsOfInterest); % Number of cells that the example logs and visualizes
+%YXC begin
+YUO.cellOfInterestIdx = numCellsOfInterest;
+%YXC end
 
 % Visualize the network topology
 hTopologyVisualizer(simParameters);   

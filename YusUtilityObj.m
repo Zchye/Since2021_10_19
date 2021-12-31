@@ -12,6 +12,12 @@ classdef YusUtilityObj < handle
         
         % Stores throughputs
         Throughput
+        
+        % Metrics step size
+        MetricsStepSize
+        
+        % Indices of cells of interest
+        cellOfInterestIdx
     end
     methods
         function obj = YusUtilityObj(param, numSlotsSim)
@@ -27,7 +33,9 @@ classdef YusUtilityObj < handle
             % stores UE indices and extra two item for cell throughput and
             % theoretical peak throughput. The third index stores site
             % indices. The fourth index stores slot numbers.
-            obj.Throughput = zeros(2, d3+2, d2, d1);
+            obj.MetricsStepSize = param.MetricsStepSize;
+            d4 = param.NumMetricsSteps;
+            obj.Throughput = zeros(2, d3+2, d2, d4);
         end
         
         function pushSlotNum(obj,slotNum)
@@ -76,7 +84,8 @@ classdef YusUtilityObj < handle
         
         function storeThroughput(obj,throughputServed, siteIdx, slotNum)
             % Stores throughput in obj.Throughput
-            obj.Throughput(:,:,siteIdx,slotNum) = throughputServed;
+            d4Idx = slotNum/obj.MetricsStepSize;
+            obj.Throughput(:,:,siteIdx,d4Idx) = throughputServed;
         end
         
         function SaveFile(obj)
