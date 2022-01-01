@@ -594,11 +594,7 @@ classdef hNRGNBPhy < hNRPhyInterface
                 csirsInd = nrCSIRSIndices(carrier, obj.CSIRSPDU);
                 csirsSym = nrCSIRS(carrier, obj.CSIRSPDU);
                 % Placing the CSI-RS in the Tx grid
-                %YXC begin
-                % Antenna virtualization
-                %txGrid(csirsInd) = csirsSym;
-                txGrid = AntVir(txGrid, obj.CSIRSPDU.NumCSIRSPorts, csirsSym, csirsInd);
-                %YXC end
+                txGrid(csirsInd) = csirsSym;
                 obj.CSIRSPDU = {};
             end
             
@@ -783,19 +779,11 @@ classdef hNRGNBPhy < hNRPhyInterface
                 % PDSCH modulation and precoding
                 pdschSymbols = nrPDSCH(carrierConfig, pdschInfo.PDSCHConfig, codedTrBlock);
                 [pdschAntSymbols, pdschAntIndices] = hPRGPrecode(size(txSlotGrid), carrierConfig.NStartGrid, pdschSymbols, pdschIndices, W);
-                %YXC begin
-                % Antenna virtualization
-                %txSlotGrid(pdschAntIndices) = pdschAntSymbols;
-                txSlotGrid = AntVir(txSlotGrid, size(W,2), pdschAntSymbols, pdschAntIndices);
-                %YXC end
+                txSlotGrid(pdschAntIndices) = pdschAntSymbols;
                 
                 % PDSCH DM-RS precoding and mapping
                 [dmrsAntSymbols, dmrsAntIndices] = hPRGPrecode(size(txSlotGrid), carrierConfig.NStartGrid, dmrsSymbols, dmrsIndices, W);
-                %YXC begin
-                % Antenna virtualization
-                %txSlotGrid(dmrsAntIndices) = dmrsAntSymbols;
-                txSlotGrid = AntVir(txSlotGrid, size(W,2), dmrsAntSymbols, dmrsAntIndices);
-                %YXC end
+                txSlotGrid(dmrsAntIndices) = dmrsAntSymbols;
             end
             updatedSlotGrid = txSlotGrid;
         end
