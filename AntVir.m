@@ -50,18 +50,16 @@ end
 
 function PEMap = P2EMapping(PortDims, AntDims)
     % Returns a map container that maps ports to antenna elements
-    SubArrayDims = AntDims./PortDims; % Size of dimensions of an subarray
+    SubArrayDims = AntDims./PortDims; % Size of dimensions of a subarray
     SubArraySize = prod(SubArrayDims); % Number of elements in a subarray
     [SubArraySub1, SubArraySub2] = ind2sub(SubArrayDims, 1:SubArraySize); % Relate subarray indices to subscripts
-    XPolJump = prod(AntDims); % Index jump between cross polarizations
-    NumPorts = prod(PortDims); % Number of ports
-    [PortSub1, PortSub2] = ind2sub(PortDims, 1:NumPorts); % Relate port indices to subscripts
+    NumPorts = 2*prod(PortDims); % Number of ports
+    [PortSub1, PortSub2, PortPol] = ind2sub([PortDims, 2], 1:NumPorts); % Relate port indices to subscripts, the third subscript corresponds to polarizations
     PEMap = containers.Map(1:NumPorts,cell(1,NumPorts)); % Initialize map containers
     for portIdx = 1:NumPorts
         ThisSub1 = (PortSub1(portIdx) - 1)*SubArrayDims(1) + SubArraySub1;
         ThisSub2 = (PortSub2(portIdx) - 1)*SubArrayDims(2) + SubArraySub2;
-        tempInd = sub2ind(AntDims, ThisSub1(:), ThisSub2(:));
-        tempInd = tempInd(:)';
-        PEMap(portIdx) = [tempInd, tempInd + XPolJump];
+        tempInd = sub2ind([AntDims, 2], ThisSub1(:), ThisSub2(:), PortPol(portIdx)*ones(SubArraySize,1));
+        PEMap(portIdx) = tempInd(:)';
     end
 end
