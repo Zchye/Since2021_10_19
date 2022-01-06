@@ -223,7 +223,7 @@ classdef hNRGNBPhy < hNRPhyInterface
             obj.YusUtilityParameter.PortPanelDims = param.PanelDimensions;
             
             % Store GNBTxAntPanelSize for antenna virtualization
-            obj.YusUtilityParameter.AntPanelDims = param.GNBTxAntPanelSize(1,2);
+            obj.YusUtilityParameter.AntPanelDims = param.GNBTxAntPanelSize(1:2);
             %MXC_1
             
             obj.YusUtilityParameter.UEStat = param.UEStates;
