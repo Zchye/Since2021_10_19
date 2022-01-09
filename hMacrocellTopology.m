@@ -63,8 +63,12 @@ numCellsPerCluster = 19;
 %}
 
 %position of 19 sites assuming hexagon with side length 1
-xSitePos = [0, 3*cosd(0:60:300), sqrt(27)*cosd(30:60:330), 6*cosd(0:60:300)];
-ySitePos = [0, 3*sind(0:60:300), sqrt(27)*sind(30:60:330), 6*sind(0:60:300)];
+% xSitePos = [0, 3*cosd(0:60:300), sqrt(27)*cosd(30:60:330), 6*cosd(0:60:300)];
+% ySitePos = [0, 3*sind(0:60:300), sqrt(27)*sind(30:60:330), 6*sind(0:60:300)];
+
+% Position of 7 sites assuming hexagon with side length 1
+xSitePos = [0, 3*cosd(0:60:300), sqrt(27)*cosd(30:60:330)];
+ySitePos = [0, 3*sind(0:60:300), sqrt(27)*sind(30:60:330)];
 
 %gNB locations, all three gNBs within a site are at the same location
 xGNBPos = repelem(xSitePos,3);
@@ -85,13 +89,13 @@ yCellPos(3:3:end) = yCellPos(3:3:end)+sind(240);
 % Minimum offset required in x and y directions to ensure positive
 % coordinates for all the vertices
 if param.NumClusters == 1
-    x = 8;
-    y = 4*sqrt(3);
+    x = 4.5; %8;
+    y = 2.5*sqrt(3);%4*sqrt(3);
 else
     error('did not implement wrap-around yet')
 end
 
-numCellsPerCluster = 57;
+numCellsPerCluster = 21;%57;
 %MXC
 
 %YXC begin
@@ -143,8 +147,8 @@ for gNBIdx = 1:numGNBs
     x = xCellPos + xDistance;
     y = yCellPos + yDistance;
     for ueIdx = 1:param.NumUEsCell
-        flag = 1;
-        while flag
+        flag_ = 1; % Append an underscore for not being confused with the MATLAB built-in command flag
+        while flag_
             %MXC
             %fixed issue of UEs distributed closer to the center of the cell
             %r = cellRadius*rand;
@@ -161,7 +165,7 @@ for gNBIdx = 1:numGNBs
             UE_gNB_distance = norm(gNBCoordinates(gNBIdx,1:2)-[px py]);
             
             if in && ~on && UE_gNB_distance>param.minUEgNBDistance
-                flag = 0;
+                flag_ = 0;
             end
             
         end

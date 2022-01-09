@@ -7,13 +7,14 @@ function [dist,newTxPox] = wDistCalc(R,TxPos,RxPos,varargin)
     %addition to the previous three.
     if isempty(varargin)
         seventxpos = cell(7,1);
+        % 21-cell wrap around
         seventxpos{1} = TxPos;
-        seventxpos{2} = TxPos + directedCalc(R,'UR',8,'R',6);
-        seventxpos{3} = TxPos + directedCalc(R,'UL',9,'UR',5);
-        seventxpos{4} = TxPos + directedCalc(R,'L',10,'UL',5);
-        seventxpos{5} = TxPos + directedCalc(R,'DL',10,'L',6);
-        seventxpos{6} = TxPos + directedCalc(R,'DR',9,'DL',7);
-        seventxpos{7} = TxPos + directedCalc(R,'R',8,'DR',7);
+        seventxpos{2} = TxPos + directedCalc(R,'UR',6,'R',3);
+        seventxpos{3} = TxPos + directedCalc(R,'UL',6,'UR',3);
+        seventxpos{4} = TxPos + directedCalc(R,'L',6,'UL',3);
+        seventxpos{5} = TxPos + directedCalc(R,'DL',6,'L',3);
+        seventxpos{6} = TxPos + directedCalc(R,'DR',6,'DL',3);
+        seventxpos{7} = TxPos + directedCalc(R,'R',6,'DR',3);
 
         sevendist = cellfun(@(x) norm(x-RxPos), seventxpos);
 

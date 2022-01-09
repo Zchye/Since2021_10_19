@@ -218,7 +218,7 @@ dlPacketSize = 2e4 * ones(simParameters.NumUEsCell,1); % Size of generated DL pa
 
 
 simParameters.NumClusters = 1;
-simParameters.NumSitesPerCluster = 57; % Number of gNBs per cluster
+simParameters.NumSitesPerCluster = 21; % Number of gNBs per cluster
 
 % Set the UE and gNB positions.
 [simParameters.gNBBearing, simParameters.GNBPositions, simParameters.UEPositions, simParameters.CellPositions, simParameters.UEStates] = hMacrocellTopology(simParameters);
