@@ -210,7 +210,13 @@ function [CQI,PMISet,CQIInfo,PMIInfo] = yCQISelect(carrier,varargin)
             layerSINRs = squeeze(SINRperSubband(subbandIdx,:));
 
             if ~any(isnan(layerSINRs))
-                codewordSINRs = cellfun(@sum,nrLayerDemap(layerSINRs));
+                %YXC begin
+                % Effective SINR
+                %codewordSINRs = cellfun(@sum,nrLayerDemap(layerSINRs));
+                f = @(x) log2(1+x);
+                finv = @(x) 2.^x - 1;
+                codewordSINRs = cellfun(@(x)finv(sum(f(x))),nrLayerDemap(layerSINRs));
+                %YXC end
             else
                 % If the linear SINR values of the codeword are NaNs, which
                 % implies, there are no CSI-RS resources in the current
