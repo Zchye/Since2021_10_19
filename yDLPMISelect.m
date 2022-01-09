@@ -1313,10 +1313,14 @@ function sinr = getPrecodedSINR(H,nVar,W)
 end
 
 %YXC begin
-function y = entropicMean(x,varargin)
+function y = entropicMean(x,flag1)
     % Entropic mean
     f = @(x) log2(1 + x);
     finv = @(x) 2.^x - 1;
-    y = finv(mean(f(x),varargin));
+    if isequal(flag1,'omitnan')
+        y = finv(mean(f(x),flag1));
+    else
+        error('entropicMean does not accept additional inputs that are not "omitnan".')
+    end
 end
 %YXC end
