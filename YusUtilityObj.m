@@ -4,6 +4,9 @@ classdef YusUtilityObj < handle
         %Stores the structure CQIInfo per slot per gNB per UE
         CQIInfoSet
         
+        % Stores the CQI computed from hPrecodedSINR.m
+        CQIOld
+        
         % Stores the SINR's computed from DMRS in linear scale
         DMRSSINR
         
@@ -27,6 +30,7 @@ classdef YusUtilityObj < handle
             %MXC_2
             d3 = param.NumUEsCell;
             obj.CQIInfoSet = cell(d1,d2,d3);
+            obj.CQIOld = cell(d1,d2,d3);
             obj.DMRSSINR = cell(d1,d2,d3);
             % obj. Throughput is a 4-dimensional array. The first index
             % stores link direction, 1 for DL, 2 for UL. The second index
@@ -74,6 +78,11 @@ classdef YusUtilityObj < handle
 %             obj.Triple = cell(3,1);
         end
         
+        function storeCQIOld(obj,cqiold)
+            idx = obj.Triple;
+            obj.CQIOld{idx{1}, idx{2}, idx{3}} = cqiold;
+        end
+        
         function storeDMRSSINR(obj, SINR)
             % Stores the SINR's computed from DMRS in linear scale in
             % DMRSSINR
@@ -91,6 +100,7 @@ classdef YusUtilityObj < handle
         function SaveFile(obj)
              % Save the simulation data
              YUO.CQIInfoSet = obj.CQIInfoSet;
+             YUO.CQIOld = obj.CQIOld;
              YUO.DMRSSINR = obj.DMRSSINR;
              YUO.Throughput = obj.Throughput;
              save('outputYUO.mat','YUO')

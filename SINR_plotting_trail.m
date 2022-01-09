@@ -50,6 +50,10 @@ UE_Wideband_SINR_counter=zeros(numSites,numUEs);
 
 %YXC begin
 DMRSSINR_counter = zeros(numSites,numUEs);
+
+CQIOld = YUO.CQIOld;
+OldLinSINR = zeros(numSites,numUEs,numSlots);
+OLSCounter = zeros(numSites,numUEs);
 %YXC end
 
 
@@ -68,6 +72,11 @@ for i = 1:numSites
             if ~isempty(DMRSSINR_raw{k,i,j})
                 DMRSSINR(i,j,k) = DMRSSINR_raw{k,i,j};
                 DMRSSINR_counter(i,j) = DMRSSINR_counter(i,j)+1;
+            end
+            
+            if ~isempty(CQIOld{k,i,j})
+                OldLinSINR(i,j,k) = CQIOld{k,i,j}.SINRPerSubbandPerCW(1);
+                OLSCounter(i,j) = OLSCounter(i,j) + 1;
             end
             %YXC end
         end
@@ -100,6 +109,14 @@ if any(DMRSSINR_counter)
     hold on
     plot(x_dmrs,f_dmrs)
     legend('CSI-RS','DMRS')
+end
+if any(OLSCounter)
+    LinAveSINR = sum(OldLinSINR,3)./OLSCounter;
+    LASdB = 10*log10(LinAveSINR);
+    hold on
+    [f_old, x_old] = ecdf(LASdB(:));
+    plot(x_old, f_old)
+    legend('Eff CSI-RS', 'Old CSI-RS')
 end
 
 end
