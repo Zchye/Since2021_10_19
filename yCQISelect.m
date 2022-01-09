@@ -108,7 +108,7 @@ function [CQI,PMISet,CQIInfo,PMIInfo] = yCQISelect(carrier,varargin)
         % the CSI-RS configuration object
 
         % Get the PMI and SINR values from the PMI selection function
-        [PMISet,PMIInfo] = hDLPMISelect(carrier,csirs,reportConfig,nLayers,H,nVar);
+        [PMISet,PMIInfo] = yDLPMISelect(carrier,csirs,reportConfig,nLayers,H,nVar);
 
         SINRperSubband = NaN(CQISubbandInfo.NumSubbands,nLayers);
         if isfield(reportConfig,'PRGSize') && ~isempty(reportConfig.PRGSize)
