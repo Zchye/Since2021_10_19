@@ -22,7 +22,7 @@ rng('default'); % Reset the random number generator
 simParameters = []; % Clear the simParameters variable
 
 % simulation configuration
-simParameters.NumFramesSim = 2; % Simulation time, in number of 10 ms frames
+simParameters.NumFramesSim = 1; % Simulation time, in number of 10 ms frames
 simParameters.EnableWrapAround = true; % Enable wrap-around modeling
 simParameters.Scenario='RMa'; %UMi, UMa or RMa
 simParameters.ScenarioConfiguration = 'A'; % A, B
@@ -127,10 +127,10 @@ switch simParameters.Scenario
                 simParameters.AntennaSlant = 0; % degrees
                 simParameters.GNBTxPower = 46; % Tx power for gNBs in dBm
                 simParameters.GNBRxGain = 8; % Receiver antenna gain at gNB in dBi
-                simParameters.GNBTxAnts = 16;
+                simParameters.GNBTxAnts = 64;
                 simParameters.GNBRxAnts = 1;
                 %YXC begin
-                simParameters.GNBTxAntPanelSize = [2 4 2 1 1]; %[M N P Mg Ng]
+                simParameters.GNBTxAntPanelSize = [8 4 2 1 1]; %[M N P Mg Ng]
                 %YXC end
                 simParameters.GNBRxAntPanelSize = [1 1 1 1 1]; %[M N P Mg Ng]
                 simParameters.GNBTxAntElementSpacing = [0.5 0.8 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
@@ -249,16 +249,16 @@ simParameters.CodebookMode = 1; % 1 or 2
 simParameters.RankIndicator = 2; 
 %}
 % Copied from https://www.sharetechnote.com/html/lte_toolbox/Matlab_LteToolbox_5G_CSI_RS.html#Example_p8_Ex01
-simParameters.CSIRSRowNumber = 6; 
-simParameters.CSIRSSubcarrierLocation = [2 4 6 8];
-simParameters.CSIRSSymbolLocation = 3;
-simParameters.CSIRSPeriod = [40 1];
-simParameters.PMIMode = 'Subband';
-simParameters.CQIMode = 'Subband';
-simParameters.PanelDimensions = [2 2]; % This is different from the one shown in the URL
-simParameters.SubbandSize = 4;
-simParameters.CodebookMode = 1;
-simParameters.RankIndicator = 2; 
+% simParameters.CSIRSRowNumber = 6; 
+% simParameters.CSIRSSubcarrierLocation = [2 4 6 8];
+% simParameters.CSIRSSymbolLocation = 3;
+% simParameters.CSIRSPeriod = [40 1];
+% simParameters.PMIMode = 'Subband';
+% simParameters.CQIMode = 'Subband';
+% simParameters.PanelDimensions = [2 2]; % This is different from the one shown in the URL
+% simParameters.SubbandSize = 4;
+% simParameters.CodebookMode = 1;
+% simParameters.RankIndicator = 2; 
 %{
 % Change DL to SISO for testing
 % Configuration copied from the original example
@@ -266,6 +266,18 @@ simParameters.RankIndicator = 2;
 % simParameters.SubbandSize = 8; % Size of sub-band for CQI reporting in terms of number of RBs
 % simParameters.PanelDimensions = [1,1];
 %}
+% Configure 32-port CSI-RS
+% Partially copied from https://www.sharetechnote.com/html/lte_toolbox/Matlab_LteToolbox_5G_CSI_RS.html#Example_p32_Ex01
+simParameters.CSIRSRowNumber = 16; 
+simParameters.CSIRSSubcarrierLocation = [2 4 6 8];
+simParameters.CSIRSSymbolLocation = [3,7];
+simParameters.CSIRSPeriod = [10 0];
+simParameters.PMIMode = 'Subband';
+simParameters.CQIMode = 'Subband';
+simParameters.PanelDimensions = [4 4]; % This is different from the one shown in the URL
+simParameters.SubbandSize = 4;
+simParameters.CodebookMode = 2;
+simParameters.RankIndicator = 2; 
 %YXC end
 %MXC_2 end
 
