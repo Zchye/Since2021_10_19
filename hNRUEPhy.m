@@ -186,8 +186,11 @@ classdef hNRUEPhy < hNRPhyInterface
         %MXC_1
         siteIdx
         
-        YusUtilityParameter
+        %YXC begin
+        % Yuxiao has moved this property to public properties
+%         YusUtilityParameter
         %MXC_1
+        %YXC end
     end
     
     %YXC begin
@@ -195,6 +198,8 @@ classdef hNRUEPhy < hNRPhyInterface
         %StoreCQIInfo stores the callback to the YusUtilityObj for storing
         %CQIInfo returned by the function hCQISelect in runtime
         StoreCQIInfo
+        
+        YusUtilityParameter
     end
     %YXC end
     
@@ -258,6 +263,7 @@ classdef hNRUEPhy < hNRPhyInterface
             obj.YusUtilityParameter.Scenario = param.Scenario;
             %MXC_1
             
+            obj.YusUtilityParameter.UEStat = param.UEStates{siteIdx, rnti};
             
             % Create UL-SCH encoder system object
             ulschEncoder = nrULSCH;
@@ -483,6 +489,11 @@ classdef hNRUEPhy < hNRPhyInterface
                     obj.ChannelModel.ReceiveAntennaArray.PolarizationModel = param.UEAntPolarizationModel;
                     obj.ChannelModel.ReceiveArrayOrientation = [0; 0; 0];
                     
+                    % UE Mobility
+                    c = physconst('lightspeed'); % speed of light in m/s
+                    fd = param.UEStates{obj.siteIdx,obj.RNTI}.Speed/c*param.DLCarrierFreq; % UE max Doppler frequency in Hz
+                    obj.ChannelModel.MaximumDopplerShift = fd;
+                    obj.ChannelModel.UTDirectionOfTravel = [param.UEStates{obj.siteIdx,obj.RNTI}.DirectionOfTravel; 90];
                     %MXC_2
                     
                     obj.ChannelModel.SampleRate = waveformInfo.SampleRate;
@@ -1005,6 +1016,17 @@ classdef hNRUEPhy < hNRPhyInterface
                 csi{cwIdx} = repmat(csi{cwIdx}.',Qm,1);   % expand by each bit per symbol
                 dlschLLRs{cwIdx} = dlschLLRs{cwIdx} .* csi{cwIdx}(:);   % scale
                 
+                %YXC begin
+                % Store SINR in YUO based on DMRS 
+%                 L_csi = length(csi);
+%                 mean_csi = zeros(L_csi,1);
+%                 for ii = 1:L_csi
+%                     mean_csi(ii) = mean(csi{ii}(:));
+%                 end
+%                 DMRSSINR = mean(mean_csi)/noiseEst-1;   % SINR in linear scale
+%                 obj.YusUtilityParameter.YUO.storeDMRSSINR(DMRSSINR);
+                %YXC end
+                
                 [decbits, crcFlag] = obj.DLSCHDecoder(dlschLLRs, pdschInfo.PDSCHConfig.Modulation, ...
                     pdschInfo.PDSCHConfig.NumLayers, pdschInfo.RV, pdschInfo.HARQID);
                 
@@ -1052,7 +1074,8 @@ classdef hNRUEPhy < hNRPhyInterface
                     rank = obj.RankIndicator;
                     %YXC begin
 %                     [cqi, pmiSet, ~, ~] = hCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
-                    [cqi, pmiSet, cqiInfo, ~] = hCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
+                    [cqi, pmiSet, ~, ~] = hCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
+                    [~, ~, cqiInfo, ~] = yCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
                     %Store cqiInfo into YusUtilityObj
                     obj.StoreCQIInfo(cqiInfo);
                     %YXC end
@@ -1106,11 +1129,23 @@ classdef hNRUEPhy < hNRPhyInterface
             gNBPos = txInfo.Position;
             UEPos = obj.Node.NodePosition;
             
-            LOS = obj.ChannelModel.HasLOSCluster;
+%             LOS = obj.ChannelModel.HasLOSCluster;
             
             %Calculate new gNB position in wrap-around mode
             [~,gNBPos] = obj.Node.DistanceCalculatorFcn(gNBPos,UEPos);
             
+            % Calculate pathloss
+            YUF = YusUtilityFunctions;
+            % Construct the structure of the parameters for input for
+            % calculating pathloss
+            paramForPL.Scenario = obj.YusUtilityParameter.Scenario;
+            paramForPL.DLCarrierFreq = obj.ChannelModel.CarrierFrequency;
+            LinkDir = 0; % 0 for DL, 1 for UL
+            [pathloss, sigma_SF] = calculatePathloss(YUF, paramForPL, gNBPos, obj.YusUtilityParameter.UEStat, LinkDir);
+            pathloss = normrnd(pathloss,sigma_SF); % Add shadow fading to pathloss
+            %{
+            % The procedure for calculating pathloss is moved to
+            % YusUtilityFunctions.m
             %get distance and heights
             d_2D=norm(gNBPos(1:2)-UEPos(1:2));
             d_3D=norm(gNBPos(1:3)-UEPos(1:3));
@@ -1207,8 +1242,8 @@ classdef hNRUEPhy < hNRPhyInterface
                 otherwise
                     error('Scenarios other than RMa, UMi, UMa are yet to be implemented.');
             end
+            %}
             
-
             %MXC_1
             % Apply path loss on IQ samples
             scale = 10.^(-pathloss/20);

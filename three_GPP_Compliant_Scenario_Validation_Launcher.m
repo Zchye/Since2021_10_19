@@ -22,7 +22,7 @@ rng('default'); % Reset the random number generator
 simParameters = []; % Clear the simParameters variable
 
 % simulation configuration
-simParameters.NumFramesSim = 5; % Simulation time, in number of 10 ms frames
+simParameters.NumFramesSim = 2; % Simulation time, in number of 10 ms frames
 simParameters.EnableWrapAround = true; % Enable wrap-around modeling
 simParameters.Scenario='RMa'; %UMi, UMa or RMa
 simParameters.ScenarioConfiguration = 'A'; % A, B
@@ -129,7 +129,9 @@ switch simParameters.Scenario
                 simParameters.GNBRxGain = 8; % Receiver antenna gain at gNB in dBi
                 simParameters.GNBTxAnts = 64;
                 simParameters.GNBRxAnts = 1;
+                %YXC begin
                 simParameters.GNBTxAntPanelSize = [8 4 2 1 1]; %[M N P Mg Ng]
+                %YXC end
                 simParameters.GNBRxAntPanelSize = [1 1 1 1 1]; %[M N P Mg Ng]
                 simParameters.GNBTxAntElementSpacing = [0.5 0.8 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
                 simParameters.GNBRxAntElementSpacing = [0.5 0.8 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
@@ -219,7 +221,7 @@ simParameters.NumClusters = 1;
 simParameters.NumSitesPerCluster = 19; % Number of gNBs per cluster
 
 % Set the UE and gNB positions.
-[simParameters.gNBBearing, simParameters.GNBPositions, simParameters.UEPositions, simParameters.CellPositions] = hMacrocellTopology(simParameters);
+[simParameters.gNBBearing, simParameters.GNBPositions, simParameters.UEPositions, simParameters.CellPositions, simParameters.UEStates] = hMacrocellTopology(simParameters);
 simParameters.NCellIDList = 0:simParameters.NumSitesPerCluster-1; % List of physical cell IDs
 
 %MXC_2 begin
@@ -231,6 +233,10 @@ simParameters.SubbandSize = 8; % Size of sub-band for CQI reporting in terms of 
 %}
 
 %copied from mimo example
+%YXC begin
+% Temporarily make the number of antenna ports and the number of antenna
+% elements equal, as 5G Toolbox does not support flexible layer mapping
+%{
 simParameters.CSIRSRowNumber = 11; % CSI-RS row number as per 3GPP TS 38.211 Table 7.4.1.5.3-1
 simParameters.CSIRSSubcarrierLocation = [1 3 5 7];
 simParameters.CSIRSSymbolLocation = 0;
@@ -241,6 +247,26 @@ simParameters.PanelDimensions = [8 1]; % [N1 N2] as per 3GPP TS 38.214 Table 5.2
 simParameters.SubbandSize = 4; % Refer TS 38.214 Table 5.2.1.4-2 for valid subband sizes
 simParameters.CodebookMode = 1; % 1 or 2
 simParameters.RankIndicator = 2; 
+%}
+% Copied from https://www.sharetechnote.com/html/lte_toolbox/Matlab_LteToolbox_5G_CSI_RS.html#Example_p8_Ex01
+simParameters.CSIRSRowNumber = 6; 
+simParameters.CSIRSSubcarrierLocation = [2 4 6 8];
+simParameters.CSIRSSymbolLocation = 3;
+simParameters.CSIRSPeriod = [40 1];
+simParameters.PMIMode = 'Subband';
+simParameters.CQIMode = 'Subband';
+simParameters.PanelDimensions = [2 2]; % This is different from the one shown in the URL
+simParameters.SubbandSize = 4;
+simParameters.CodebookMode = 1;
+simParameters.RankIndicator = 2; 
+%{
+% Change DL to SISO for testing
+% Configuration copied from the original example
+% simParameters.CSIRSRowNumber = 2; % Possible row numbers for single transmit antenna case are 1 and 2
+% simParameters.SubbandSize = 8; % Size of sub-band for CQI reporting in terms of number of RBs
+% simParameters.PanelDimensions = [1,1];
+%}
+%YXC end
 %MXC_2 end
 
 % Calculate the slot duration for the selected SCS and the number of slots in a 10 ms frame.
@@ -337,6 +363,7 @@ for siteIdx = 1:simParameters.NumSitesPerCluster
         UEs{siteIdx, ueIdx} = hNRUE(simParameters, ueIdx);
         UEs{siteIdx, ueIdx}.PhyEntity = hNRUEPhy(simParameters, siteIdx, ueIdx); % Create PHY layer instance
         UEs{siteIdx, ueIdx}.PhyEntity.StoreCQIInfo = @YUO.storeCQIInfo; % Register the callback to YusUtilityObj
+        UEs{siteIdx, ueIdx}.PhyEntity.YusUtilityParameter.YUO = YUO;    % Store handle of YUO in UE PHY
         configurePhy(UEs{siteIdx, ueIdx}, simParameters); % Configure PHY layer
         % Register distance calculator for wrap-around distance computations
         UEs{siteIdx, ueIdx}.DistanceCalculatorFcn =  distCalc;
@@ -381,8 +408,11 @@ end
 % Set up logging and visualization, specifying the central cell (cell 0) and the cell of interest.
 %MXC_2
 %cellsOfInterest = unique([0; simParameters.CellOfInterest]);
-cellsOfInterest = [0; 1; 2];
+cellsOfInterest = (0:56)';%[0; 1; 2];
 numCellsOfInterest = length(cellsOfInterest); % Number of cells that the example logs and visualizes
+%YXC begin
+YUO.cellOfInterestIdx = numCellsOfInterest;
+%YXC end
 
 % Visualize the network topology
 hTopologyVisualizer(simParameters);   
@@ -404,10 +434,17 @@ for siteIdx = 1:numCellsOfInterest
     %comment out visualization code to speed up simulation
     
     if simParameters.EnableAllVisualization
-        visualizer{siteIdx} = hNRMetricsVisualizer(simParameters, 'MACLogger', simSchedulingLogger{siteIdx}, 'PhyLogger', simPhyLogger{siteIdx});
+        %YXC begin
+        visualizer{siteIdx} = hNRMetricsVisualizer(simParameters, 'MACLogger', simSchedulingLogger{siteIdx}, 'PhyLogger', simPhyLogger{siteIdx},'siteIdx',siteIdx,'YUO',YUO);
+        %YXC end
     end
 end
-
+%YXC begin
+ConfTime = toc;
+ConfTime = seconds(ConfTime);
+disp(['Time elapsed: ',datestr(ConfTime,'MM:SS')])
+disp('Configuration finished. Start processing loop.')
+%YXC end
 %% Processing Loop
 % Simulation is run slot by slot. For each cell, in each slot, these operations are executed:
 % *Run the MAC and PHY layers of gNB
@@ -424,7 +461,7 @@ for symbolNum = 1 : tickGranularity : numSymbolsSim
 
     %MXC_2
     %show which symbol is currently being run
-    fprintf('running slot # %d out of %d \n',(((symbolNum-1)/14)+1), numSlotsSim);
+    %fprintf('running slot # %d out of %d \n',(((symbolNum-1)/14)+1), numSlotsSim);
     %MXC_2
 
     if mod(symbolNum - 1, 14) == 0
@@ -442,6 +479,21 @@ for symbolNum = 1 : tickGranularity : numSymbolsSim
             pushTriple(YUO,slotNum,siteIdx,ueIdx);
             
             run(UEs{siteIdx, ueIdx});
+            %YXC begin
+            % Log simulation progress
+            Time = toc;
+            Time = seconds(Time);
+            LoopTime = Time - ConfTime;
+            Progress = ((symbolNum-1)/tickGranularity*simParameters.NumSitesPerCluster*...
+                simParameters.NumUEsCell+(siteIdx-1)*simParameters.NumUEsCell+ueIdx)/...
+                (numSlotsSim*simParameters.NumSitesPerCluster*simParameters.NumUEsCell);
+            TimeLeft = LoopTime/Progress + ConfTime - LoopTime;
+            disp(['Time elapsed: ',datestr(Time,'dd:HH:MM:SS'), '. Remaining time: ',datestr(TimeLeft,'dd:HH:MM:SS')])
+            disp(['Progress: ',num2str(floor(100*Progress)),'%. ',...
+                'Processed: UE(',num2str(ueIdx),'/',num2str(simParameters.NumUEsCell),') in ',...
+                'cell(',num2str(siteIdx),'/',num2str(simParameters.NumSitesPerCluster),') of ',...
+                'slot(',num2str(floor((symbolNum-1)/tickGranularity)+1),'/',num2str(numSlotsSim),').'])
+            %YXC end
         end
 
         cellIdx = find((siteIdx-1) == cellsOfInterest, 1);
@@ -496,9 +548,9 @@ for symbolNum = 1 : tickGranularity : numSymbolsSim
     %MXC_3
     
     
-    yuxtime = toc;
-    lineToPrint = ['Elapsed time: ', datestr(seconds(yuxtime),'dd:HH:MM:SS')];
-    disp(lineToPrint);
+    %yuxtime = toc;
+    %lineToPrint = ['Elapsed time: ', datestr(seconds(yuxtime),'dd:HH:MM:SS')];
+    %disp(lineToPrint);
 
 end
 
@@ -540,17 +592,24 @@ for siteIdx = 1:numCellsOfInterest
 end
 save(simParameters.ParametersLogFile, 'simParameters'); % Save simulation parameters in a MAT-file
 save(simParameters.SimulationLogFile, 'simulationLogs'); % Save simulation logs in a MAT-file
-
+SaveFile(YUO); % Save data in YUO in a MAT-file
 %MXC_2
 SINR_plotting_trail(YUO);
-
+%YXC begim
+plotThroughputCDF(YUO,'DL');
+%YXC end
 %MXC_2
-disp('simulation complete');
-elapsed_time=toc;
-lineToPrint = ['Elapsed time: ', datestr(datenum(0,0,0,0,0,elapsed_time),'HH:MM:SS')];
-disp(lineToPrint);
+% disp('simulation complete');
+% elapsed_time=toc;
+% lineToPrint = ['Elapsed time: ', datestr(datenum(0,0,0,0,0,elapsed_time),'dd:HH:MM:SS')];
+% disp(lineToPrint);
 %MXC_2
 
+%YXC begin
+EndTime = toc;
+EndTime = seconds(EndTime);
+disp(['Simulation finished. Total time: ',datestr(EndTime,'dd:HH:MM:SS')])
+%YXC end
 
 
 

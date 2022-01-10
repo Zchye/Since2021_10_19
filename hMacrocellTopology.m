@@ -1,4 +1,4 @@
-function [gNBBearing, gNBCoordinates, ueCoordinates, cellCoordinates] = hMacrocellTopology(param)
+function [gNBBearing, gNBCoordinates, ueCoordinates, cellCoordinates, UE_states] = hMacrocellTopology(param)
 %hMacrocellTopology Calculate gNB and UE positions for the network
 %
 %   [GNBCOORDINATES, UECOORDINATES] = hMacrocellTopology(PARAM) returns the gNB
@@ -172,6 +172,167 @@ for gNBIdx = 1:numGNBs
         ueCoordinates{gNBIdx, 1}(ueIdx, :) = pos;
     end
 end
+
+UE_states = cell(numGNBs,param.NumUEsCell);
+for gNBIdx = 1:numGNBs
+    for ueIdx = 1:param.NumUEsCell
+        %generate states structure
+        states = struct('UEPosition','0','LOS','0','Indoor','0','HighLoss','0','InCar','0','Speed','0','d2Din','0','DirectionOfTravel','0');
+        
+        %fill in position
+        states.UEPosition = ueCoordinates{gNBIdx, 1}(ueIdx, :);
+        
+        %generate LOS 
+        states.LOS = assignLOS(param,gNBCoordinates(gNBIdx,1:3),states.UEPosition);
+        
+        %generate other states
+        switch param.Scenario
+        case 'RMa'
+            % generate indoor outdoor conditions
+            %50% indoor 
+            states.Indoor = binornd(1,0.5);
+            
+            if states.Indoor
+                %generate high/Low loss if indoors
+                %0% high loss
+                states.HighLoss = 0;
+                %generate speed 
+                states.Speed = 0.83; %m/s
+                %generate d_2D-in for indoor UEs
+                states.d2Din = min(10*rand(2,1));
+            else%outdoor
+                %generate in-car/Pedestrain if outdoors
+                %100% in car for config A
+                states.InCar = 1;
+                %generate speed 
+                states.Speed = 33.33; %m/s
+            end
+            
+        case 'UMi'
+            % generate indoor outdoor conditions
+            %80% indoor
+            states.Indoor = binornd(1,0.8);
+            
+            if states.Indoor
+                %generate high/Low loss if indoors
+                %20% high loss
+                states.HighLoss = binornd(1,0.2);
+                %generate speed 
+                states.Speed = 0.83; %m/s
+                %generate d_2D-in for indoor UEs
+                states.d2Din = min(25*rand(2,1));
+            else%outdoor
+                %generate in-car/Pedestrain if outdoors
+                %100% in car
+                states.InCar = 1;
+                %generate speed 
+                states.Speed = 8.33; %m/s
+            end
+            
+        case 'UMa'
+            % generate indoor outdoor conditions
+            %80% indoor
+            states.Indoor = binornd(1,0.8);
+            
+            if states.Indoor
+                %generate high/Low loss if indoors
+                %20% high loss
+                states.HighLoss = binornd(1,0.2);
+                %generate speed 
+                states.Speed = 0.83; %m/s
+                %generate d_2D-in for indoor UEs
+                states.d2Din = min(25*rand(2,1));
+            else %outdoor
+                %generate in-car/Pedestrain if outdoors
+                %100% in car
+                states.InCar = 1;
+                %generate speed 
+                states.Speed = 8.33; %m/s
+            end
+            
+        otherwise
+            error('Scenarios other than RMa, UMi, UMa are yet to be implemented.');
+        end
+        
+        %generate direction of travel
+        states.DirectionOfTravel = 360*rand;% degrees
+
+        
+        %fill corresponding cell with corresponding structure
+        UE_states{gNBIdx,ueIdx} = states;
+    end
+end
+
+end
+
+function LOS=assignLOS(param,gNBPos,UEPos)
+    %assignLOS assigns propagation conditions (LOS/NLOS) for each BS-UT
+    %link according to 3GPP TR 38.901 Table 7.4.2-1
+    %param - a structure containing the field Scenario
+    %gNBPos - the Cartesian coordinates of a gNB, must be a 3-D column
+    %vector
+    %UEPos - the Cartesion coordinates of a UE, must be a 3-D column vector
+    %LOS - 1 for LOS, 0 for NLOS.
+    
+    %get the parameters in 3GPP TR 38.901 Figure7.4.1-1
+    d_2D=norm(gNBPos(1:2)-UEPos(1:2));
+    h_UT=UEPos(3);
+    
+    %select the function to calculate LOS probability
+    switch param.Scenario
+        case 'RMa'
+            h=@RMaProb;
+        case 'UMi'
+            h=@UMiProb;
+        case 'UMa'
+            h=@UMaProb;
+        otherwise
+            error('Scenarios other than RMa, UMi, UMa are yet to be implemented.');
+    end
+    
+    %calculate LOS probability
+    Prob=h(d_2D,h_UT);
+    
+    %generate Bernoulli random variable with the probability Prob
+    LOS=binornd(1,Prob);
+
+end
+
+function Prob=RMaProb(d_2D,~)
+    %see 3GPP TR 38.901 Table 7.4.2-1
+    if d_2D<=10
+        Prob=1;
+    else
+        Prob=exp(-(d_2D-10)/1000);
+    end
+end
+
+function Prob=UMiProb(d_2D,~)
+    %see 3GPP TR 38.901 Table 7.4.2-1
+    if d_2D<=18
+        Prob=1;
+    else
+        Prob=18/d_2D+exp(-d_2D/36)*(1-18/d_2D);
+    end
+end
+
+function Prob=UMaProb(d_2D,h_UT)
+    %see 3GPP TR 38.901 Table 7.4.2-1
+    if h_UT<=13
+        C=0;
+    elseif 13<h_UT && h_UT<=23
+        C=((h_UT-13)/10)^1.5;
+    else
+         error('The height of a UE must not exceed 23m.');
+    end
+
+    if d_2D<=18
+        Prob=1;
+    else
+        Prob=(18/d_2D+exp(-d_2D/63)*(1-18/d_2D))*(1+C*5/4*(d_2D/100)^3*exp(-d_2D/150));
+    end
+end
+
 
 
 

@@ -9,6 +9,10 @@ function SINR_plotting_trail(YUO)
 
 CQI_info_set_raw = YUO.CQIInfoSet; %numSlots X numSites X numUEs cell array
 
+%YXC begin
+DMRSSINR_raw = YUO.DMRSSINR;
+%YXC end
+
 %
 %YusUtilityObj, last dimension too big, param.NumUEsCell is sufficient
 %
@@ -36,9 +40,17 @@ UE_Wideband_SINR=zeros(numSites,numUEs,numSlots);
 %UE_Wideband_SINR is an array with size equal number of sites X number of UEs X number of slots
 %use this variable to store the wideband SINR of each UE during each slot
 
+%YXC begin
+DMRSSINR = zeros(numSites,numUEs,numSlots);
+%YXC end
+
 %findout how many samples was collected for each UE
 %count how many times this UE was updated
 UE_Wideband_SINR_counter=zeros(numSites,numUEs);
+
+%YXC begin
+DMRSSINR_counter = zeros(numSites,numUEs);
+%YXC end
 
 
 for i = 1:numSites
@@ -52,17 +64,27 @@ for i = 1:numSites
             
                 UE_Wideband_SINR_counter(i,j) = UE_Wideband_SINR_counter(i,j) + 1;
             end
+            %YXC begin
+            if ~isempty(DMRSSINR_raw{k,i,j})
+                DMRSSINR(i,j,k) = DMRSSINR_raw{k,i,j};
+                DMRSSINR_counter(i,j) = DMRSSINR_counter(i,j)+1;
+            end
+            %YXC end
         end
     end
 end
 
-UE_average_SINR = (sum(UE_Wideband_SINR, 3))./UE_Wideband_SINR_counter;
 
-UE_average_SINR_dB = 20*log10(UE_average_SINR);
-% 10 or 20?
+% Calculate entropic average
+f = @(x) log2(1+x);
+finv = @(x) 2.^x - 1;
+UE_average_SINR = finv((sum(f(UE_Wideband_SINR), 3))./UE_Wideband_SINR_counter);
+
+UE_average_SINR_dB = 10*log10(UE_average_SINR);
+% 10 not 20 because SINR is the ratio of powers and powers should be
+% applied with coefficient 10 when converted from linear to dB.
 
 UE_average_SINR_dB = reshape(UE_average_SINR_dB,[],1);
-
 
 [f,x]=ecdf(UE_average_SINR_dB);
 
@@ -71,11 +93,13 @@ plot(x, f);
 title('SINR CDF','FontSize',12);
 xlabel('UE Average SINR [dB]','FontSize',12);
 ylabel('C.D.F','FontSize',12);
-
+if any(DMRSSINR_counter)
+    UEAverageDMRSSINR = (sum(DMRSSINR,3))./DMRSSINR_counter;
+    UEAverageDMRSSINR_dB = 10*log10(UEAverageDMRSSINR);
+    [f_dmrs,x_dmrs] = ecdf(UEAverageDMRSSINR_dB(:));
+    hold on
+    plot(x_dmrs,f_dmrs)
+    legend('CSI-RS','DMRS')
 end
 
-
-
-
-
-
+end

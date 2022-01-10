@@ -218,7 +218,15 @@ classdef hNRGNBPhy < hNRPhyInterface
             obj.siteIdx = siteIdx;
             
             obj.YusUtilityParameter.Scenario = param.Scenario;
+            
+            % Store CSI-RS port panel dimensions for antenna virtualization
+            obj.YusUtilityParameter.PortPanelDims = param.PanelDimensions;
+            
+            % Store GNBTxAntPanelSize for antenna virtualization
+            obj.YusUtilityParameter.AntPanelDims = param.GNBTxAntPanelSize(1:2);
             %MXC_1
+            
+            obj.YusUtilityParameter.UEStat = param.UEStates;
             
             % Create DL-SCH encoder system objects for the UEs
             obj.DLSCHEncoders = cell(param.NumUEs, 1);
@@ -376,6 +384,12 @@ classdef hNRGNBPhy < hNRPhyInterface
                         channel.ReceiveAntennaArray.PolarizationModel = param.GNBAntPolarizationModel;
                         channel.ReceiveArrayOrientation = [CHParam.bearing; CHParam.downtilt; CHParam.slant];
                         %MXC_2
+                        
+                        % UE Mobility
+                        c = physconst('lightspeed'); % speed of light in m/s
+                        fd = param.UEStates{obj.siteIdx,ueIdx}.Speed/c*param.ULCarrierFreq; % UE max Doppler frequency in Hz
+                        channel.MaximumDopplerShift = fd;
+                        channel.UTDirectionOfTravel = [param.UEStates{obj.siteIdx,ueIdx}.DirectionOfTravel; 90];
                         
                         channel.SampleRate = waveformInfo.SampleRate;
                         chInfo = info(channel);
@@ -586,7 +600,18 @@ classdef hNRGNBPhy < hNRPhyInterface
                 csirsInd = nrCSIRSIndices(carrier, obj.CSIRSPDU);
                 csirsSym = nrCSIRS(carrier, obj.CSIRSPDU);
                 % Placing the CSI-RS in the Tx grid
-                txGrid(csirsInd) = csirsSym;
+                %YXC begin
+                % Antenna virtualization
+                %txGrid(csirsInd) = csirsSym;
+                InptStrct = [];
+                InptStrct.PortDims = obj.YusUtilityParameter.PortPanelDims;
+                InptStrct.AntDims = obj.YusUtilityParameter.AntPanelDims;
+                InptStrct.AntGrid = txGrid;
+                InptStrct.NumPorts = obj.CSIRSPDU.NumCSIRSPorts;
+                InptStrct.Sym = csirsSym;
+                InptStrct.SymLinInd = csirsInd;
+                txGrid = AntVir(InptStrct);
+                %YXC end
                 obj.CSIRSPDU = {};
             end
             
@@ -771,11 +796,33 @@ classdef hNRGNBPhy < hNRPhyInterface
                 % PDSCH modulation and precoding
                 pdschSymbols = nrPDSCH(carrierConfig, pdschInfo.PDSCHConfig, codedTrBlock);
                 [pdschAntSymbols, pdschAntIndices] = hPRGPrecode(size(txSlotGrid), carrierConfig.NStartGrid, pdschSymbols, pdschIndices, W);
-                txSlotGrid(pdschAntIndices) = pdschAntSymbols;
+                %YXC begin
+                % Antenna virtualization
+                %txSlotGrid(pdschAntIndices) = pdschAntSymbols;
+                InptStrct = [];
+                InptStrct.PortDims = obj.YusUtilityParameter.PortPanelDims;
+                InptStrct.AntDims = obj.YusUtilityParameter.AntPanelDims;
+                InptStrct.AntGrid = txSlotGrid;
+                InptStrct.NumPorts = size(W,2);
+                InptStrct.Sym = pdschAntSymbols;
+                InptStrct.SymLinInd = pdschAntIndices;
+                txSlotGrid = AntVir(InptStrct);
+                %YXC end
                 
                 % PDSCH DM-RS precoding and mapping
                 [dmrsAntSymbols, dmrsAntIndices] = hPRGPrecode(size(txSlotGrid), carrierConfig.NStartGrid, dmrsSymbols, dmrsIndices, W);
-                txSlotGrid(dmrsAntIndices) = dmrsAntSymbols;
+                %YXC begin
+                % Antenna virtualization
+                %txSlotGrid(dmrsAntIndices) = dmrsAntSymbols;
+                InptStrct = [];
+                InptStrct.PortDims = obj.YusUtilityParameter.PortPanelDims;
+                InptStrct.AntDims = obj.YusUtilityParameter.AntPanelDims;
+                InptStrct.AntGrid = txSlotGrid;
+                InptStrct.NumPorts = size(W,2);
+                InptStrct.Sym = dmrsAntSymbols;
+                InptStrct.SymLinInd = dmrsAntIndices;
+                txSlotGrid = AntVir(InptStrct);
+                %YXC end
             end
             updatedSlotGrid = txSlotGrid;
         end
@@ -951,8 +998,22 @@ classdef hNRGNBPhy < hNRPhyInterface
             
             %Calculate new UE position in wrap-around mode
             [~,UEPos] = obj.Node.DistanceCalculatorFcn(UEPos,gNBPos);
-
             
+            % Calculate pathloss
+            YUF = YusUtilityFunctions;
+            % Construct the structure of the parameters for input for
+            % calculating pathloss
+            paramForPL.Scenario = obj.YusUtilityParameter.Scenario;
+            paramForPL.ULCarrierFreq = obj.ChannelModel{txInfo.RNTI}.CarrierFrequency;
+            LinkDir = 1; % 0 for DL, 1 for UL
+            UEStat = obj.YusUtilityParameter.UEStat{obj.siteIdx,txInfo.RNTI};
+            UEStat.UEPosition = UEPos;
+            [pathloss, sigma_SF] = calculatePathloss(YUF, paramForPL, gNBPos, UEStat, LinkDir);
+            pathloss = normrnd(pathloss,sigma_SF); % Add shadow fading to pathloss
+
+            %{
+            % The functions for calculating pathloss are moved to
+            % YusUilityFuctions.m
             d_2D=norm(gNBPos(1:2)-UEPos(1:2));
             d_3D=norm(gNBPos(1:3)-UEPos(1:3));
             h_BS = gNBPos(3);
@@ -1051,6 +1112,7 @@ classdef hNRGNBPhy < hNRPhyInterface
                 otherwise
                     error('Scenarios other than RMa, UMi, UMa are yet to be implemented.');
             end
+            %}
             
             %MXC_1
             % Apply pathloss on IQ samples

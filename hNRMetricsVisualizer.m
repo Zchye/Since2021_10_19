@@ -73,6 +73,12 @@ classdef hNRMetricsVisualizer < handle
         % A vector of two elements. First element represents downlink and
         % second element represents uplink theoretical peak data rate respectively
         PeakDataRate = zeros(2, 1);
+        
+        %YXC begin
+        siteIdx
+        
+        YUO
+        %YXC end
     end
 
     properties (Access = private)
@@ -480,6 +486,11 @@ classdef hNRMetricsVisualizer < handle
                 plotId = obj.PlotIDs(plotIdx);
                 obj.MACVisualization{plotId}(throughputServed(plotId, :), resourceshare(plotId, :), goodput(plotId, :), bufferstatus(plotId, :));
             end
+            
+            %YXC begin
+            % Store throughput in YUO
+            storeThroughput(obj.YUO, throughputServed, obj.siteIdx, slotNum);
+            %YXC end
         end
 
         function plotPhyMetrics(obj, slotNum)
