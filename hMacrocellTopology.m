@@ -44,7 +44,7 @@ yClusterCentre = [0, 7*sqrt(3)/2, -sqrt(3)/2, -4*sqrt(3), -7*sqrt(3)/2, sqrt(3)/
 
 %MXC 
 %new cell and gNB locations
-%{
+
 % xGNBPos and yGNBPos are x and y coordinates of base stations in a cluster respectively
 xGNBPos = [0, sqrt(3)*cosd(30:60:360), 3*cosd(0), 2*sqrt(3)*cosd(30), 3*cosd(60), 2*sqrt(3)*cosd(90), 3*cosd(120), 2*sqrt(3)*cosd(150), 3*cosd(180), 2*sqrt(3)*cosd(210), 3*cosd(240), 2*sqrt(3)*cosd(270), 3*cosd(300), 2*sqrt(3)*cosd(330)];
 yGNBPos = [0, sqrt(3)*sind(30:60:360), 3*sind(0), 2*sqrt(3)*sind(30), 3*sind(60), 2*sqrt(3)*sind(90), 3*sind(120), 2*sqrt(3)*sind(150), 3*sind(180), 2*sqrt(3)*sind(210), 3*sind(240), 2*sqrt(3)*sind(270), 3*sind(300), 2*sqrt(3)*sind(330)];
@@ -60,45 +60,45 @@ else
 end
 
 numCellsPerCluster = 19;
-%}
+
 
 %position of 19 sites assuming hexagon with side length 1
-xSitePos = [0, 3*cosd(0:60:300), sqrt(27)*cosd(30:60:330), 6*cosd(0:60:300)];
-ySitePos = [0, 3*sind(0:60:300), sqrt(27)*sind(30:60:330), 6*sind(0:60:300)];
+% xSitePos = [0, 3*cosd(0:60:300), sqrt(27)*cosd(30:60:330), 6*cosd(0:60:300)];
+% ySitePos = [0, 3*sind(0:60:300), sqrt(27)*sind(30:60:330), 6*sind(0:60:300)];
 
 %gNB locations, all three gNBs within a site are at the same location
-xGNBPos = repelem(xSitePos,3);
-yGNBPos = repelem(ySitePos,3);
+% xGNBPos = repelem(xSitePos,3);
+% yGNBPos = repelem(ySitePos,3);
 
 %since gNBs are on the edge of cells, need cell center for UE generation
 xCellPos = xGNBPos;
 yCellPos = yGNBPos;
 
-xCellPos(1:3:end) = xCellPos(1:3:end)+cosd(0);
-xCellPos(2:3:end) = xCellPos(2:3:end)+cosd(120);
-xCellPos(3:3:end) = xCellPos(3:3:end)+cosd(240);
-
-yCellPos(1:3:end) = yCellPos(1:3:end)+sind(0);
-yCellPos(2:3:end) = yCellPos(2:3:end)+sind(120);
-yCellPos(3:3:end) = yCellPos(3:3:end)+sind(240);
+% xCellPos(1:3:end) = xCellPos(1:3:end)+cosd(0);
+% xCellPos(2:3:end) = xCellPos(2:3:end)+cosd(120);
+% xCellPos(3:3:end) = xCellPos(3:3:end)+cosd(240);
+% 
+% yCellPos(1:3:end) = yCellPos(1:3:end)+sind(0);
+% yCellPos(2:3:end) = yCellPos(2:3:end)+sind(120);
+% yCellPos(3:3:end) = yCellPos(3:3:end)+sind(240);
 
 % Minimum offset required in x and y directions to ensure positive
 % coordinates for all the vertices
-if param.NumClusters == 1
-    x = 8;
-    y = 4*sqrt(3);
-else
-    error('did not implement wrap-around yet')
-end
-
-numCellsPerCluster = 57;
+% if param.NumClusters == 1
+%     x = 8;
+%     y = 4*sqrt(3);
+% else
+%     error('did not implement wrap-around yet')
+% end
+% 
+% numCellsPerCluster = 57;
 %MXC
 
 %YXC begin
 %Assign antenna bearing angles to each gNB.
-temp=[0;120;240];
-temp=repelem(temp,1,numCellsPerCluster/3);
-gNBBearing=temp(:);
+% temp=[0;120;240];
+% temp=repelem(temp,1,numCellsPerCluster/3);
+gNBBearing=zeros(numCellsPerCluster,1);%temp(:);
 %YXC end
 
 % gNB positions

@@ -123,7 +123,7 @@ switch simParameters.Scenario
                 
                 % gNB configuration
                 simParameters.gNBHeight = 35; % meters
-                simParameters.AntennaDowntilt = 10; % degrees
+                simParameters.AntennaDowntilt = 0; % degrees
                 simParameters.AntennaSlant = 0; % degrees
                 simParameters.GNBTxPower = 46; % Tx power for gNBs in dBm
                 simParameters.GNBRxGain = 8; % Receiver antenna gain at gNB in dBi
@@ -216,7 +216,7 @@ dlPacketSize = 2e4 * ones(simParameters.NumUEsCell,1); % Size of generated DL pa
 
 
 simParameters.NumClusters = 1;
-simParameters.NumSitesPerCluster = 57; % Number of gNBs per cluster
+simParameters.NumSitesPerCluster = 19; % Number of gNBs per cluster
 
 % Set the UE and gNB positions.
 [simParameters.gNBBearing, simParameters.GNBPositions, simParameters.UEPositions, simParameters.CellPositions] = hMacrocellTopology(simParameters);
