@@ -126,7 +126,7 @@ switch simParameters.Scenario
                 
                 % gNB configuration
                 simParameters.gNBHeight = 35; % meters
-                simParameters.AntennaDowntilt = 10; % degrees
+                simParameters.AntennaDowntilt = 0; % degrees
                 simParameters.AntennaSlant = 0; % degrees
                 simParameters.GNBTxPower = 46; % Tx power for gNBs in dBm
                 simParameters.GNBRxGain = 8; % Receiver antenna gain at gNB in dBi
@@ -140,7 +140,7 @@ switch simParameters.Scenario
                 simParameters.GNBRxAntElementSpacing = [0.5 0.8 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
                 simParameters.GNBTxAntPolarizationAngles = [45 -45];
                 simParameters.GNBRxAntPolarizationAngles = 45;
-                simParameters.GNBAntElement = '38.901';
+                simParameters.GNBAntElement = 'isotropic';
                 simParameters.GNBAntPolarizationModel = 'Model-2';
                 
                 
