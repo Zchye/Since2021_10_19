@@ -218,6 +218,12 @@ classdef hNRGNBPhy < hNRPhyInterface
             obj.siteIdx = siteIdx;
             
             obj.YusUtilityParameter.Scenario = param.Scenario;
+            
+            % Store CSI-RS port panel dimensions for antenna virtualization
+            obj.YusUtilityParameter.PortPanelDims = param.PanelDimensions;
+            
+            % Store GNBTxAntPanelSize for antenna virtualization
+            obj.YusUtilityParameter.AntPanelDims = param.GNBTxAntPanelSize(1:2);
             %MXC_1
             
             obj.YusUtilityParameter.UEStat = param.UEStates;
@@ -597,7 +603,14 @@ classdef hNRGNBPhy < hNRPhyInterface
                 %YXC begin
                 % Antenna virtualization
                 %txGrid(csirsInd) = csirsSym;
-                txGrid = AntVir(txGrid, obj.CSIRSPDU.NumCSIRSPorts, csirsSym, csirsInd);
+                InptStrct = [];
+                InptStrct.PortDims = obj.YusUtilityParameter.PortPanelDims;
+                InptStrct.AntDims = obj.YusUtilityParameter.AntPanelDims;
+                InptStrct.AntGrid = txGrid;
+                InptStrct.NumPorts = obj.CSIRSPDU.NumCSIRSPorts;
+                InptStrct.Sym = csirsSym;
+                InptStrct.SymLinInd = csirsInd;
+                txGrid = AntVir(InptStrct);
                 %YXC end
                 obj.CSIRSPDU = {};
             end
@@ -786,7 +799,14 @@ classdef hNRGNBPhy < hNRPhyInterface
                 %YXC begin
                 % Antenna virtualization
                 %txSlotGrid(pdschAntIndices) = pdschAntSymbols;
-                txSlotGrid = AntVir(txSlotGrid, size(W,2), pdschAntSymbols, pdschAntIndices);
+                InptStrct = [];
+                InptStrct.PortDims = obj.YusUtilityParameter.PortPanelDims;
+                InptStrct.AntDims = obj.YusUtilityParameter.AntPanelDims;
+                InptStrct.AntGrid = txSlotGrid;
+                InptStrct.NumPorts = size(W,2);
+                InptStrct.Sym = pdschAntSymbols;
+                InptStrct.SymLinInd = pdschAntIndices;
+                txSlotGrid = AntVir(InptStrct);
                 %YXC end
                 
                 % PDSCH DM-RS precoding and mapping
@@ -794,7 +814,14 @@ classdef hNRGNBPhy < hNRPhyInterface
                 %YXC begin
                 % Antenna virtualization
                 %txSlotGrid(dmrsAntIndices) = dmrsAntSymbols;
-                txSlotGrid = AntVir(txSlotGrid, size(W,2), dmrsAntSymbols, dmrsAntIndices);
+                InptStrct = [];
+                InptStrct.PortDims = obj.YusUtilityParameter.PortPanelDims;
+                InptStrct.AntDims = obj.YusUtilityParameter.AntPanelDims;
+                InptStrct.AntGrid = txSlotGrid;
+                InptStrct.NumPorts = size(W,2);
+                InptStrct.Sym = dmrsAntSymbols;
+                InptStrct.SymLinInd = dmrsAntIndices;
+                txSlotGrid = AntVir(InptStrct);
                 %YXC end
             end
             updatedSlotGrid = txSlotGrid;
