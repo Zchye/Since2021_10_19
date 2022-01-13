@@ -13,8 +13,8 @@ function hTopologyVisualizer(param)
 
 %MXC
 %changed due to different topology
-%sideLength = param.InterSiteDistance/sqrt(3);
-sideLength = param.InterSiteDistance/3;
+sideLength = param.InterSiteDistance/sqrt(3);
+% sideLength = param.InterSiteDistance/3;
 %MXC
 
 % Using the screen width and height, calculate figure width and height
