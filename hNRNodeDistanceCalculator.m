@@ -39,7 +39,7 @@ classdef hNRNodeDistanceCalculator < handle
             end
         end
 
-        function distance = getDistance(obj, txPosition, rxPosition)
+        function [distance, newTxPos] = getDistance(obj, txPosition, rxPosition)
             %getDistance Calculate the distance between the nodes
             %   DISTANCE = GETDISTANCE(OBJ, TXPOSITION, RXPOSITION) returns
             %   the distance between the transmitter and receiver nodes.
@@ -50,17 +50,35 @@ classdef hNRNodeDistanceCalculator < handle
             %
             %   DISTANCE contains the calculated distance.
 
-            distance = norm(rxPosition - txPosition);
+%             distance = norm(rxPosition - txPosition);
             if obj.EnableWrapAround
                 % Calculate the six wrap-around distances
-                wrapAroundDist = zeros(6,1);
-                wrapAroundDist(1) = norm(rxPosition - (txPosition - [1.732*obj.InterSiteDistance, 4*obj.InterSiteDistance, 0]));
-                wrapAroundDist(2) = norm(rxPosition - (txPosition - [-1.732*obj.InterSiteDistance, -4*obj.InterSiteDistance, 0]));
-                wrapAroundDist(3) = norm(rxPosition - (txPosition - [2.598*obj.InterSiteDistance, -3.5*obj.InterSiteDistance, 0]));
-                wrapAroundDist(4) = norm(rxPosition - (txPosition - [-2.598*obj.InterSiteDistance, 3.5*obj.InterSiteDistance, 0]));
-                wrapAroundDist(5) = norm(rxPosition - (txPosition - [4.33*obj.InterSiteDistance, 0.5*obj.InterSiteDistance, 0]));
-                wrapAroundDist(6) = norm(rxPosition - (txPosition - [-4.33*obj.InterSiteDistance, -0.5*obj.InterSiteDistance, 0]));
-                distance = min([distance; wrapAroundDist]);
+%                 wrapAroundDist = zeros(6,1);
+%                 wrapAroundDist(1) = norm(rxPosition - (txPosition - [1.732*obj.InterSiteDistance, 4*obj.InterSiteDistance, 0]));
+%                 wrapAroundDist(2) = norm(rxPosition - (txPosition - [-1.732*obj.InterSiteDistance, -4*obj.InterSiteDistance, 0]));
+%                 wrapAroundDist(3) = norm(rxPosition - (txPosition - [2.598*obj.InterSiteDistance, -3.5*obj.InterSiteDistance, 0]));
+%                 wrapAroundDist(4) = norm(rxPosition - (txPosition - [-2.598*obj.InterSiteDistance, 3.5*obj.InterSiteDistance, 0]));
+%                 wrapAroundDist(5) = norm(rxPosition - (txPosition - [4.33*obj.InterSiteDistance, 0.5*obj.InterSiteDistance, 0]));
+%                 wrapAroundDist(6) = norm(rxPosition - (txPosition - [-4.33*obj.InterSiteDistance, -0.5*obj.InterSiteDistance, 0]));
+%                 distance = min([distance; wrapAroundDist]);
+                %YXC begin
+                seventxpos = cell(7,1);
+                seventxpos{1} = txPosition;
+                seventxpos{2} = txPosition - [1.732*obj.InterSiteDistance, 4*obj.InterSiteDistance, 0];
+                seventxpos{3} = txPosition - [-1.732*obj.InterSiteDistance, -4*obj.InterSiteDistance, 0];
+                seventxpos{4} = txPosition - [2.598*obj.InterSiteDistance, -3.5*obj.InterSiteDistance, 0];
+                seventxpos{5} = txPosition - [-2.598*obj.InterSiteDistance, 3.5*obj.InterSiteDistance, 0];
+                seventxpos{6} = txPosition - [4.33*obj.InterSiteDistance, 0.5*obj.InterSiteDistance, 0];
+                seventxpos{7} = txPosition - [-4.33*obj.InterSiteDistance, -0.5*obj.InterSiteDistance, 0];
+                
+                sevendist = cellfun(@(x) norm(x-rxPosition), seventxpos);
+                
+                [distance, I] = min(sevendist(:));
+                newTxPos = seventxpos{I};
+            else
+                distance = norm(rxPosition - txPosition);
+                newTxPos = txPosition;
+                %XYC end
             end
         end
     end

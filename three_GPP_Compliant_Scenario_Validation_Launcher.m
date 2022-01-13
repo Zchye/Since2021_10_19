@@ -326,11 +326,13 @@ UEs = cell(simParameters.NumSitesPerCluster, simParameters.NumUEsCell);
 %Create DL and UL packet distribution objects, and initialize a wrap-around distance calculator callback.
 dlPacketDistributionObj = hNRPacketDistribution(simParameters, 0); % 0 for DL
 ulPacketDistributionObj = hNRPacketDistribution(simParameters, 1); % 1 for UL
-if simParameters.EnableWrapAround
-    distCalc = @(TxPos,RxPos) wDistCalc(simParameters.InterSiteDistance/3,TxPos,RxPos);
-else
-    distCalc = @(TxPos,RxPos) wDistCalc(simParameters.InterSiteDistance/3,TxPos,RxPos,'NoWrapAround');
-end
+% if simParameters.EnableWrapAround
+%     distCalc = @(TxPos,RxPos) wDistCalc(simParameters.InterSiteDistance/3,TxPos,RxPos);
+% else
+%     distCalc = @(TxPos,RxPos) wDistCalc(simParameters.InterSiteDistance/3,TxPos,RxPos,'NoWrapAround');
+% end
+distCalcObj = hNRNodeDistanceCalculator(simParameters);
+distCalc = @distCalcObj.getDistance;
 
 %Initialize YusUtilityObj
 YUO = YusUtilityObj(simParameters, numSlotsSim);
