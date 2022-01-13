@@ -59,7 +59,7 @@ else
     y = 13*sqrt(3)/2;
 end
 
-numCellsPerCluster = 19;
+numCellsPerCluster = 7;
 
 
 %position of 19 sites assuming hexagon with side length 1

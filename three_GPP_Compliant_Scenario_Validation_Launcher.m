@@ -218,7 +218,7 @@ dlPacketSize = 2e4 * ones(simParameters.NumUEsCell,1); % Size of generated DL pa
 
 
 simParameters.NumClusters = 1;
-simParameters.NumSitesPerCluster = 19; % Number of gNBs per cluster
+simParameters.NumSitesPerCluster = 7; % Number of gNBs per cluster
 
 % Set the UE and gNB positions.
 [simParameters.gNBBearing, simParameters.GNBPositions, simParameters.UEPositions, simParameters.CellPositions, simParameters.UEStates] = hMacrocellTopology(simParameters);
@@ -326,13 +326,13 @@ UEs = cell(simParameters.NumSitesPerCluster, simParameters.NumUEsCell);
 %Create DL and UL packet distribution objects, and initialize a wrap-around distance calculator callback.
 dlPacketDistributionObj = hNRPacketDistribution(simParameters, 0); % 0 for DL
 ulPacketDistributionObj = hNRPacketDistribution(simParameters, 1); % 1 for UL
-% if simParameters.EnableWrapAround
-%     distCalc = @(TxPos,RxPos) wDistCalc(simParameters.InterSiteDistance/3,TxPos,RxPos);
-% else
-%     distCalc = @(TxPos,RxPos) wDistCalc(simParameters.InterSiteDistance/3,TxPos,RxPos,'NoWrapAround');
-% end
-distCalcObj = hNRNodeDistanceCalculator(simParameters);
-distCalc = @distCalcObj.getDistance;
+if simParameters.EnableWrapAround
+    distCalc = @(TxPos,RxPos) wDistCalc(simParameters.InterSiteDistance/sqrt(3),TxPos,RxPos);
+else
+    distCalc = @(TxPos,RxPos) wDistCalc(simParameters.InterSiteDistance/sqrt(3),TxPos,RxPos,'NoWrapAround');
+end
+% distCalcObj = hNRNodeDistanceCalculator(simParameters);
+% distCalc = @distCalcObj.getDistance;
 
 %Initialize YusUtilityObj
 YUO = YusUtilityObj(simParameters, numSlotsSim);
@@ -410,10 +410,10 @@ end
 % Set up logging and visualization, specifying the central cell (cell 0) and the cell of interest.
 %MXC_2
 %cellsOfInterest = unique([0; simParameters.CellOfInterest]);
-cellsOfInterest = (0:56)';%[0; 1; 2];
+cellsOfInterest = (0:6)';%[0; 1; 2];
 numCellsOfInterest = length(cellsOfInterest); % Number of cells that the example logs and visualizes
 %YXC begin
-YUO.cellOfInterestIdx = numCellsOfInterest;
+YUO.cellOfInterestIdx = 1;
 %YXC end
 
 % Visualize the network topology
