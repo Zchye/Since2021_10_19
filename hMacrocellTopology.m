@@ -34,8 +34,8 @@ validateattributes(param.NumUEsCell, {'numeric'}, {'nonempty', 'integer', 'scala
 
 %MXC
 %new topology, cell radius is one third of ISD
-%cellRadius = param.InterSiteDistance/sqrt(3);
-cellRadius = param.InterSiteDistance/3;
+cellRadius = param.InterSiteDistance/sqrt(3);
+% cellRadius = param.InterSiteDistance/3;
 %MXC
 
 % x-coordinate and y-coordinate of cluster centres normalized with respect to the cell radius.
