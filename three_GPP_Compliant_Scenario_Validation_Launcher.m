@@ -204,7 +204,7 @@ else
 end
 %MXC_3
 %Update the output metrics plots periodically, specifying NumMetricsSteps updates within the simulation.
-simParameters.NumMetricsSteps = 10;
+simParameters.NumMetricsSteps = 10*simParameters.NumFramesSim;
 %Write the logs to MAT-files. The example uses these logs for post-simulation analysis and visualization.
 simParameters.ParametersLogFile = 'simParameters'; % For logging the simulation parameters
 simParameters.SimulationLogFile = 'simulationLogs'; % For logging the simulation logs
@@ -439,9 +439,9 @@ for siteIdx = 1:numCellsOfInterest
     % Create visualization object for MAC and PHY metrics 
     %comment out visualization code to speed up simulation
     
-    if simParameters.EnableAllVisualization
+    if true%simParameters.EnableAllVisualization
         %YXC begin
-        visualizer{siteIdx} = hNRMetricsVisualizer(simParameters, 'MACLogger', simSchedulingLogger{siteIdx}, 'PhyLogger', simPhyLogger{siteIdx},'siteIdx',siteIdx,'YUO',YUO);
+        visualizer{siteIdx} = hNRMetricsVisualizer(simParameters, 'MACLogger', simSchedulingLogger{siteIdx}, 'PhyLogger', simPhyLogger{siteIdx}, 'VisualizationFlag', 0, 'siteIdx',siteIdx,'YUO',YUO);
         %YXC end
     end
 end
@@ -524,7 +524,7 @@ for symbolNum = 1 : tickGranularity : numSymbolsSim
         end
     end
     %MXC_3
-    if simParameters.EnableAllVisualization
+    if true%simParameters.EnableAllVisualization
         for idx = 1:numCellsOfInterest
             % Visualization
             % Check slot boundary
