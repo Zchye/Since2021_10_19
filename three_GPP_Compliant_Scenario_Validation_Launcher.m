@@ -130,10 +130,10 @@ switch simParameters.Scenario
                 simParameters.AntennaSlant = 0; % degrees
                 simParameters.GNBTxPower = 46; % Tx power for gNBs in dBm
                 simParameters.GNBRxGain = 8; % Receiver antenna gain at gNB in dBi
-                simParameters.GNBTxAnts = 64;
+                simParameters.GNBTxAnts = 128;
                 simParameters.GNBRxAnts = 1;
                 %YXC begin
-                simParameters.GNBTxAntPanelSize = [8 4 2 1 1]; %[M N P Mg Ng]
+                simParameters.GNBTxAntPanelSize = [8 8 2 1 1]; %[M N P Mg Ng]
                 %YXC end
                 simParameters.GNBRxAntPanelSize = [1 1 1 1 1]; %[M N P Mg Ng]
                 simParameters.GNBTxAntElementSpacing = [0.5 0.8 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
@@ -441,7 +441,7 @@ for siteIdx = 1:numCellsOfInterest
     
     if simParameters.EnableAllVisualization
         %YXC begin
-        visualizer{siteIdx} = hNRMetricsVisualizer(simParameters, 'MACLogger', simSchedulingLogger{siteIdx}, 'PhyLogger', simPhyLogger{siteIdx},'siteIdx',siteIdx,'YUO',YUO);
+        visualizer{siteIdx} = hNRMetricsVisualizer(simParameters, 'MACLogger', simSchedulingLogger{siteIdx}, 'PhyLogger', simPhyLogger{siteIdx},'VisualizationFlag', 0, 'siteIdx',siteIdx,'YUO',YUO);
         %YXC end
     end
 end
