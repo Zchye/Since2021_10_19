@@ -42,6 +42,7 @@ UE_Wideband_SINR=zeros(numSites,numUEs,numSlots);
 
 %YXC begin
 DMRSSINR = zeros(numSites,numUEs,numSlots);
+YuSINR = zeros(numSites,numUEs,numSlots);
 %YXC end
 
 %findout how many samples was collected for each UE
@@ -50,6 +51,7 @@ UE_Wideband_SINR_counter=zeros(numSites,numUEs);
 
 %YXC begin
 DMRSSINR_counter = zeros(numSites,numUEs);
+YuSINRcnt = zeros(numSites,numUEs);
 %YXC end
 
 
@@ -68,6 +70,11 @@ for i = 1:numSites
             if ~isempty(DMRSSINR_raw{k,i,j})
                 DMRSSINR(i,j,k) = DMRSSINR_raw{k,i,j};
                 DMRSSINR_counter(i,j) = DMRSSINR_counter(i,j)+1;
+            end
+            
+            if ~isempty(YUO.YuSINR{k,i,j})
+                YuSINR(i,j,k) = YUO.YuSINR{k,i,j};
+                YuSINRcnt(i,j) = YuSINRcnt(i,j) + 1;
             end
             %YXC end
         end
@@ -93,13 +100,24 @@ plot(x, f);
 title('SINR CDF','FontSize',12);
 xlabel('UE Average SINR [dB]','FontSize',12);
 ylabel('C.D.F','FontSize',12);
+lgd = {'CSI-RS'};
 if any(DMRSSINR_counter)
     UEAverageDMRSSINR = (sum(DMRSSINR,3))./DMRSSINR_counter;
     UEAverageDMRSSINR_dB = 10*log10(UEAverageDMRSSINR);
     [f_dmrs,x_dmrs] = ecdf(UEAverageDMRSSINR_dB(:));
     hold on
     plot(x_dmrs,f_dmrs)
-    legend('CSI-RS','DMRS')
+    lgd = [lgd, 'DMRS']; 
 end
+if any(YuSINRcnt)
+    AveYuSINRperUE = sum(YuSINR,3)./YuSINRcnt;
+    AveYuSINRperUE_dB = 10*log10(AveYuSINRperUE);
+    [f_yusinr, x_yusinr] = ecdf(AveYuSINRperUE_dB(:));
+    hold on
+    plot(x_yusinr, f_yusinr)
+    lgd = [lgd, 'YuSINR'];
+end
+
+legend(lgd);
 
 end

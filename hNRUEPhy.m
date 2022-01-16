@@ -1069,6 +1069,12 @@ classdef hNRUEPhy < hNRPhyInterface
                     cdmLen = mapping(cdmType{1});
                     % Estimated channel and noise variance
                     [Hest,nVar] = nrChannelEstimate(rxGrid, csirsRefInd, csirsSym, 'CDMLengths', cdmLen);
+                    
+                    %YXC begin
+                    % Store YuSINR
+                    YuSINR = yPrecodedSINR(Hest, nVar, 'MF');
+                    obj.YusUtilityParameter.YUO.storeYuSINR(YuSINR);
+                    %YXC end
 
                     rank = obj.RankIndicator;
                     %YXC begin
