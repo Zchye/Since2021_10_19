@@ -42,6 +42,7 @@ UE_Wideband_SINR=zeros(numSites,numUEs,numSlots);
 
 %YXC begin
 DMRSSINR = zeros(numSites,numUEs,numSlots);
+YuSINR = zeros(numSites,numUEs,numSlots);
 %YXC end
 
 %findout how many samples was collected for each UE
@@ -50,6 +51,7 @@ UE_Wideband_SINR_counter=zeros(numSites,numUEs);
 
 %YXC begin
 DMRSSINR_counter = zeros(numSites,numUEs);
+YuSINRcnt = zeros(numSites,numUEs);
 
 CQIOld = YUO.CQIOld;
 OldLinSINR = zeros(numSites,numUEs,numSlots);
@@ -78,6 +80,11 @@ for i = 1:numSites
                 OldLinSINR(i,j,k) = CQIOld{k,i,j}.SINRPerSubbandPerCW(1);
                 OLSCounter(i,j) = OLSCounter(i,j) + 1;
             end
+            
+            if ~isempty(YUO.YuSINR{k,i,j})
+                YuSINR(i,j,k) = YUO.YuSINR{k,i,j};
+                YuSINRcnt(i,j) = YuSINRcnt(i,j) + 1;
+            end
             %YXC end
         end
     end
@@ -95,20 +102,21 @@ UE_average_SINR_dB = 10*log10(UE_average_SINR);
 
 UE_average_SINR_dB = reshape(UE_average_SINR_dB,[],1);
 
-[f,x]=ecdf(UE_average_SINR_dB);
+[f_,x]=ecdf(UE_average_SINR_dB);
 
 figure('name','CDF UEs DL SINR [dB]');
-plot(x, f);
+plot(x, f_);
 title('SINR CDF','FontSize',12);
 xlabel('UE Average SINR [dB]','FontSize',12);
 ylabel('C.D.F','FontSize',12);
+lgd = {'Eff CSI-RS'};
 if any(DMRSSINR_counter)
     UEAverageDMRSSINR = (sum(DMRSSINR,3))./DMRSSINR_counter;
     UEAverageDMRSSINR_dB = 10*log10(UEAverageDMRSSINR);
     [f_dmrs,x_dmrs] = ecdf(UEAverageDMRSSINR_dB(:));
     hold on
     plot(x_dmrs,f_dmrs)
-    legend('CSI-RS','DMRS')
+    lgd = [lgd, 'Old DMRS'];
 end
 if any(OLSCounter)
     LinAveSINR = sum(OldLinSINR,3)./OLSCounter;
@@ -116,7 +124,17 @@ if any(OLSCounter)
     hold on
     [f_old, x_old] = ecdf(LASdB(:));
     plot(x_old, f_old)
-    legend('Eff CSI-RS', 'Old CSI-RS')
+    lgd = [lgd, 'Old CSI-RS'];
 end
+if any(YuSINRcnt)
+    AveYuSINRperUE = sum(YuSINR,3)./YuSINRcnt;
+    AveYuSINRperUE_dB = 10*log10(AveYuSINRperUE);
+    [f_yusinr, x_yusinr] = ecdf(AveYuSINRperUE_dB(:));
+    hold on
+    plot(x_yusinr, f_yusinr)
+    lgd = [lgd, 'YuSINR'];
+end
+
+legend(lgd);
 
 end

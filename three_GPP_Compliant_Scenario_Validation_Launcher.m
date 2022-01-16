@@ -22,7 +22,7 @@ rng('default'); % Reset the random number generator
 simParameters = []; % Clear the simParameters variable
 
 % simulation configuration
-simParameters.NumFramesSim = 5; % Simulation time, in number of 10 ms frames
+simParameters.NumFramesSim = 2; % Simulation time, in number of 10 ms frames
 %YXC begin
 % Disable wrap around when we study only the 3 cells at the centre
 simParameters.EnableWrapAround = false;%true; % Enable wrap-around modeling
