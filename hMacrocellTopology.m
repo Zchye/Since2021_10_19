@@ -147,8 +147,8 @@ for gNBIdx = 1:numGNBs
         while flag
             %MXC
             %fixed issue of UEs distributed closer to the center of the cell
-            %r = cellRadius*rand;
-            r = cellRadius*sqrt(rand);
+            r = cellRadius*rand;
+            %r = cellRadius*sqrt(rand);
             %MXC
             theta = 360*rand;
             % Get a random point
