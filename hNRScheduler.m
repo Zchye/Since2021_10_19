@@ -1645,7 +1645,7 @@ classdef (Abstract) hNRScheduler < handle
                 failedRxHarqs = find(~cellfun(@isempty,reTxContextUE));
                 if ~isempty(failedRxHarqs) % At least one DL HARQ process for UE requires retransmission
                     % Select rank and precoding matrix for the UE
-                    [rank, W] = selectRankAndPrecodingMatrix(obj, obj.CSIMeasurement(reTxAssignmentOrder(i)));
+                    [rank, W] = yselectRankAndPrecodingMatrix(obj, obj.CSIMeasurement(reTxAssignmentOrder(i)));
                     % Select one HARQ process randomly
                     selectedHarqId = failedRxHarqs(randi(length(failedRxHarqs))) - 1;
                     % Read last DL grant TBS. Retransmission grant TBS also needs to be
@@ -1858,7 +1858,7 @@ classdef (Abstract) hNRScheduler < handle
             W = cell(numEligibleUEs, 1); % To store selected precoding matrices for the UEs
             rank = zeros(numEligibleUEs, 1); % To store selected rank for the UEs
             for i=1:numEligibleUEs
-                [rank(i), W{i}] = selectRankAndPrecodingMatrix(obj, obj.CSIMeasurement(eligibleUEs(i)));
+                [rank(i), W{i}] = yselectRankAndPrecodingMatrix(obj, obj.CSIMeasurement(eligibleUEs(i)));
             end
 
             % For each available RBG, based on the scheduling strategy
@@ -2321,6 +2321,17 @@ classdef (Abstract) hNRScheduler < handle
                         csiReport.PMISet.i1(1), csiReport.PMISet.i1(2), csiReport.PMISet.i1(3)).';
                 end
             end
+        end
+        
+        function [rank, W] = yselectRankAndPrecodingMatrix(obj, csiReport)
+            %selectRankAndPrecodingMatrix Select rank and precoding matrix based on the CSI report from the UE
+            rank = csiReport.RankIndicator;
+            if isempty(obj.Type1SinglePanelCodebook)
+                % Single antenna port
+                W = 1;
+                return
+            end
+            W = csiReport.YuPrecoder;
         end
 
         function mcsRowIndex = getMCSIndex(obj, cqiIndex)

@@ -1072,7 +1072,7 @@ classdef hNRUEPhy < hNRPhyInterface
                     
                     %YXC begin
                     % Store YuSINR
-                    YuSINR = yPrecodedSINR(Hest, nVar, 'MF');
+                    [YuSINR, F] = yPrecodedSINR(Hest, nVar, 'MF');
                     obj.YusUtilityParameter.YUO.storeYuSINR(YuSINR);
                     %YXC end
 
@@ -1106,7 +1106,7 @@ classdef hNRUEPhy < hNRPhyInterface
                     cqiRBs(cqiRBs<=1) = 1; % Ensuring minimum CQI as 1
                     
                     % Report the CQI to MAC
-                    obj.CSIRSIndicationFcn(rank, pmiSet, cqiRBs);
+                    obj.CSIRSIndicationFcn(rank, pmiSet, cqiRBs, F);
                 end
             end
         end
