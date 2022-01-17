@@ -259,12 +259,12 @@ simParameters.RankIndicator = 2;
 simParameters.CSIRSRowNumber = 6; 
 simParameters.CSIRSSubcarrierLocation = [2 4 6 8];
 simParameters.CSIRSSymbolLocation = 3;
-simParameters.CSIRSPeriod = [40 1];
+simParameters.CSIRSPeriod = [4 0];
 simParameters.PMIMode = 'Subband';
 simParameters.CQIMode = 'Subband';
-simParameters.PanelDimensions = [4 1]; % Prompt error if [1 4]
+simParameters.PanelDimensions = [2,2]; % Prompt error if [1 4]
 simParameters.SubbandSize = 4;
-simParameters.CodebookMode = 1;
+simParameters.CodebookMode = 2;
 simParameters.RankIndicator = 2; 
 
 % Change DL to SISO for testing
