@@ -580,7 +580,7 @@ classdef (Abstract) hNRScheduler < handle
             obj.RetransmissionContextDL = cell(numUEs, obj.NumHARQ);
             
             % CSI measurements initialization 
-            obj.CSIMeasurement = repmat(struct('RankIndicator', [], 'PMISet', [], 'CQI', []), numUEs, 1);
+            obj.CSIMeasurement = repmat(struct('RankIndicator', [], 'PMISet', [], 'CQI', [], 'YuPrecoder', []), numUEs, 1);
             initialRank = 1; % Initial ranks for UEs 
             for i=1:numUEs
                 obj.CSIMeasurement(i).RankIndicator = initialRank;
@@ -1645,7 +1645,12 @@ classdef (Abstract) hNRScheduler < handle
                 failedRxHarqs = find(~cellfun(@isempty,reTxContextUE));
                 if ~isempty(failedRxHarqs) % At least one DL HARQ process for UE requires retransmission
                     % Select rank and precoding matrix for the UE
-                    [rank, W] = yselectRankAndPrecodingMatrix(obj, obj.CSIMeasurement(reTxAssignmentOrder(i)));
+                    %YXC begin
+                    if ~isempty(obj.CSIMeasurement(reTxAssignmentOrder(i)).YuPrecoder)
+                        [rank, W] = yselectRankAndPrecodingMatrix(obj, obj.CSIMeasurement(reTxAssignmentOrder(i)));
+                    else
+                        [rank, W] = selectRankAndPrecodingMatrix(obj, obj.CSIMeasurement(reTxAssignmentOrder(i)));
+                    end
                     % Select one HARQ process randomly
                     selectedHarqId = failedRxHarqs(randi(length(failedRxHarqs))) - 1;
                     % Read last DL grant TBS. Retransmission grant TBS also needs to be
@@ -1858,7 +1863,12 @@ classdef (Abstract) hNRScheduler < handle
             W = cell(numEligibleUEs, 1); % To store selected precoding matrices for the UEs
             rank = zeros(numEligibleUEs, 1); % To store selected rank for the UEs
             for i=1:numEligibleUEs
-                [rank(i), W{i}] = yselectRankAndPrecodingMatrix(obj, obj.CSIMeasurement(eligibleUEs(i)));
+                %YXC begin
+                if ~isempty(obj.CSIMeasurement(eligibleUEs(i)).YuPrecoder)
+                    [rank(i), W{i}] = yselectRankAndPrecodingMatrix(obj, obj.CSIMeasurement(eligibleUEs(i)));
+                else
+                    [rank(i), W{i}] = selectRankAndPrecodingMatrix(obj, obj.CSIMeasurement(eligibleUEs(i)));
+                end
             end
 
             % For each available RBG, based on the scheduling strategy
