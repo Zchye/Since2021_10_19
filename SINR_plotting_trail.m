@@ -111,12 +111,15 @@ xlabel('UE Average SINR [dB]','FontSize',12);
 ylabel('C.D.F','FontSize',12);
 lgd = {'Eff CSI-RS'};
 if any(DMRSSINR_counter)
-    UEAverageDMRSSINR = (sum(DMRSSINR,3))./DMRSSINR_counter;
+    IndicNaN = isnan(DMRSSINR); % Generate logic array indicating NaN's
+    NumNaN = sum(IndicNaN(:)); % Get the total number of NaN's
+    DMRSSINR_counter = DMRSSINR_counter - NumNaN; % NaN's do not count
+    UEAverageDMRSSINR = (sum(DMRSSINR,3,'omitnan'))./DMRSSINR_counter;
     UEAverageDMRSSINR_dB = 10*log10(UEAverageDMRSSINR);
-    [f_dmrs,x_dmrs] = ecdf(UEAverageDMRSSINR_dB(:));
+    [f_dmrs,x_dmrs] = ecdf(real(UEAverageDMRSSINR_dB(:)));
     hold on
     plot(x_dmrs,f_dmrs)
-    lgd = [lgd, 'Old DMRS'];
+    lgd = [lgd, 'Prec Eff DMRS'];
 end
 if any(OLSCounter)
     LinAveSINR = sum(OldLinSINR,3)./OLSCounter;
@@ -132,7 +135,7 @@ if any(YuSINRcnt)
     [f_yusinr, x_yusinr] = ecdf(AveYuSINRperUE_dB(:));
     hold on
     plot(x_yusinr, f_yusinr)
-    lgd = [lgd, 'YuSINR'];
+    lgd = [lgd, 'Prec Eff CSI-RS'];
 end
 
 legend(lgd);

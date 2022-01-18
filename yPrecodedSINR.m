@@ -18,7 +18,7 @@ function [sinr, F] = yPrecodedSINR(H, nVar, P)
     % Construct function handles for calculating unnormalized precoder
     MFPrecoder = @(H) H';
     ZFPrecocer = @(H) H'/(H*H');
-    DesigPrecoder = @(H) H;
+    DesigPrecoder = @(H) P;
     
     % Parse input
     if ischar(P)||isstring(P)
@@ -39,7 +39,7 @@ function [sinr, F] = yPrecodedSINR(H, nVar, P)
             otherwise
                 error('Not implement yet')
         end
-    elseif ismatrix(P)
+    elseif isa(P, 'double')
         Pcdr = DesigPrecoder;
     else
         error('"P" must be of either char array/string or vector/matrix')
@@ -59,7 +59,14 @@ function [sinr, F] = yPrecodedSINR(H, nVar, P)
         for l = 1:NumSym
             Htemp = H(k,l,:,:);
             Htemp = reshape(Htemp,size(H,3,4));
-            W = Pcdr(Htemp); % Get precoder
+            W_ = Pcdr(Htemp); % Get precoder
+            if ismatrix(W_)
+                W = W_;
+            elseif ndims(W_)==4 % if P is a collection of precoders for each subcarrier and each symbol
+                W = squeeze(W_(k,l,:,:));
+            else
+                error('Invalid P.');
+            end
             W = W/norm(W,'fro'); % Normalize the precoder
             F(k,l,:,:) = W;
             noise = nVar*eye(size(W,2)); % Noise variance multiplied by identity matrix

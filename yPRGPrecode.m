@@ -13,7 +13,7 @@ function [antsym,antind] = yPRGPrecode(siz,nstartgrid,portsym,portind,F)
     % Apply precoder
     for k = 1:K
         for l = 1:L
-            BFGrid(k,l,:,:) = squeeze(F(k,l,:,:))*reshape(PortGrid(k,l,:),[],1);
+            BFGrid(k,l,:) = squeeze(F(k,l,:,:))*reshape(PortGrid(k,l,:),[],1);
         end
     end
     
