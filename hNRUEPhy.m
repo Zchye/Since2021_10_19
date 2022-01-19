@@ -1101,7 +1101,8 @@ classdef hNRUEPhy < hNRPhyInterface
                     rank = obj.RankIndicator;
                     %YXC begin
 %                     [cqi, pmiSet, ~, ~] = hCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
-                    [cqi, pmiSet, ~, ~] = hCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
+                    [cqi, pmiSet, cqiold, ~] = hCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
+                    obj.YusUtilityParameter.YUO.storeCQIOld(cqiold);
                     [~, ~, cqiInfo, ~] = yCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
                     %Store cqiInfo into YusUtilityObj
                     obj.StoreCQIInfo(cqiInfo);
