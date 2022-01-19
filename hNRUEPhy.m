@@ -997,11 +997,33 @@ classdef hNRUEPhy < hNRPhyInterface
                 obj.DLSCHDecoder.TransportBlockLength = pdschInfo.TBS*8;
                 obj.DLSCHDecoder.TargetCodeRate = pdschInfo.TargetCodeRate;
                 [estChannelGrid,noiseEst] = nrChannelEstimate(rxGrid, dmrsIndices, dmrsSymbols, 'CDMLengths', pdschInfo.PDSCHConfig.DMRS.CDMLengths);
+                %YXC begin
+                %OldPrecoder = obj.Node.MACEntity.CSIMeasurement.YuPrecoder;
+%                 if ndims(estChannelGrid)==4
+%                     [YuDMRSSINR, ~] = yPrecodedSINR(estChannelGrid, noiseEst, eye(2));
+%                 else
+%                     YuDMRSSINR = NaN;
+%                 end
+%                 obj.YusUtilityParameter.YUO.storeDMRSSINR(YuDMRSSINR);
+                %YXC end
                 % Get PDSCH resource elements from the received grid
                 [pdschRx,pdschHest] = nrExtractResources(pdschIndices,rxGrid,estChannelGrid);
                 
                 % Equalization
                 [pdschEq,csi] = nrEqualizeMMSE(pdschRx,pdschHest,noiseEst);
+                %YXC begin
+                f = @(x) log2(1+x);
+                finv = @(x) 2.^x-1;
+                entropicMean = @(x) finv(mean(f(x),'omitnan'));
+                effsum = @(x) finv(sum(f(x),'omitnan'));
+                NcsiLayer = size(csi, 2);
+                LayerMean = zeros(1,NcsiLayer);
+                for layerIdx = 1:NcsiLayer
+                    LayerMean(layerIdx) = entropicMean(csi(:,layerIdx)/noiseEst-1);
+                end
+                DMRSSINR = effsum(LayerMean);
+                obj.YusUtilityParameter.YUO.storeDMRSSINR(DMRSSINR);
+                %YXC end
                 
                 % PDSCH decoding
                 [dlschLLRs,rxSymbols] = nrPDSCHDecode(pdschEq, pdschInfo.PDSCHConfig.Modulation, pdschInfo.PDSCHConfig.NID, ...
@@ -1069,11 +1091,18 @@ classdef hNRUEPhy < hNRPhyInterface
                     cdmLen = mapping(cdmType{1});
                     % Estimated channel and noise variance
                     [Hest,nVar] = nrChannelEstimate(rxGrid, csirsRefInd, csirsSym, 'CDMLengths', cdmLen);
+                    
+                    %YXC begin
+                    % Store YuSINR
+                    [YuSINR, F] = yPrecodedSINR(Hest, nVar, 'MF');
+                    obj.YusUtilityParameter.YUO.storeYuSINR(YuSINR);
+                    %YXC end
 
                     rank = obj.RankIndicator;
                     %YXC begin
 %                     [cqi, pmiSet, ~, ~] = hCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
-                    [cqi, pmiSet, ~, ~] = hCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
+                    [cqi, pmiSet, cqiold, ~] = hCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
+                    obj.YusUtilityParameter.YUO.storeCQIOld(cqiold);
                     [~, ~, cqiInfo, ~] = yCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
                     %Store cqiInfo into YusUtilityObj
                     obj.StoreCQIInfo(cqiInfo);
@@ -1099,7 +1128,7 @@ classdef hNRUEPhy < hNRPhyInterface
                     cqiRBs(cqiRBs<=1) = 1; % Ensuring minimum CQI as 1
                     
                     % Report the CQI to MAC
-                    obj.CSIRSIndicationFcn(rank, pmiSet, cqiRBs);
+                    obj.CSIRSIndicationFcn(rank, pmiSet, cqiRBs, F);
                 end
             end
         end
