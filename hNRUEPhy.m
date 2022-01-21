@@ -999,12 +999,19 @@ classdef hNRUEPhy < hNRPhyInterface
                 [estChannelGrid,noiseEst] = nrChannelEstimate(rxGrid, dmrsIndices, dmrsSymbols, 'CDMLengths', pdschInfo.PDSCHConfig.DMRS.CDMLengths);
                 %YXC begin
                 %OldPrecoder = obj.Node.MACEntity.CSIMeasurement.YuPrecoder;
-%                 if ndims(estChannelGrid)==4
-%                     [YuDMRSSINR, ~] = yPrecodedSINR(estChannelGrid, noiseEst, eye(2));
-%                 else
-%                     YuDMRSSINR = NaN;
-%                 end
-%                 obj.YusUtilityParameter.YUO.storeDMRSSINR(YuDMRSSINR);
+                if ndims(estChannelGrid)==4
+                    [K,L,P] = size(estChannelGrid,1,2,3);
+                    Prc = zeros(size(estChannelGrid));
+                    for k = 1:K
+                        for l = 1:L
+                            Prc(k,l,:,:) = eye(P);
+                        end
+                    end
+                    [YuDMRSSINR, ~] = yPrecodedSINR(estChannelGrid, noiseEst, Prc);
+                else
+                    YuDMRSSINR = NaN;
+                end
+                obj.YusUtilityParameter.YUO.storeDMRSSINR(YuDMRSSINR);
                 %YXC end
                 % Get PDSCH resource elements from the received grid
                 [pdschRx,pdschHest] = nrExtractResources(pdschIndices,rxGrid,estChannelGrid);
@@ -1012,17 +1019,17 @@ classdef hNRUEPhy < hNRPhyInterface
                 % Equalization
                 [pdschEq,csi] = nrEqualizeMMSE(pdschRx,pdschHest,noiseEst);
                 %YXC begin
-                f = @(x) log2(1+x);
-                finv = @(x) 2.^x-1;
-                entropicMean = @(x) finv(mean(f(x),'omitnan'));
-                effsum = @(x) finv(sum(f(x),'omitnan'));
-                NcsiLayer = size(csi, 2);
-                LayerMean = zeros(1,NcsiLayer);
-                for layerIdx = 1:NcsiLayer
-                    LayerMean(layerIdx) = entropicMean(csi(:,layerIdx)/noiseEst-1);
-                end
-                DMRSSINR = effsum(LayerMean);
-                obj.YusUtilityParameter.YUO.storeDMRSSINR(DMRSSINR);
+%                 f = @(x) log2(1+x);
+%                 finv = @(x) 2.^x-1;
+%                 entropicMean = @(x) finv(mean(f(x),'omitnan'));
+%                 effsum = @(x) finv(sum(f(x),'omitnan'));
+%                 NcsiLayer = size(csi, 2);
+%                 LayerMean = zeros(1,NcsiLayer);
+%                 for layerIdx = 1:NcsiLayer
+%                     LayerMean(layerIdx) = entropicMean(csi(:,layerIdx)/noiseEst-1);
+%                 end
+%                 DMRSSINR = effsum(LayerMean);
+%                 obj.YusUtilityParameter.YUO.storeDMRSSINR(DMRSSINR);
                 %YXC end
                 
                 % PDSCH decoding
