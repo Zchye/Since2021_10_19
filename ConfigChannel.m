@@ -547,9 +547,8 @@ function [tau_n,tau_nForStep6] = genTau_n(param,LSPs,LOS)
     
     %Generate tau_n
     %MXC_1 quick fix 
-    %MXC_2 made smaller
-    %X = rand(N_cluster,1);
-    X = 0.4 * rand(N_cluster,1) + 0.6;
+    X = rand(N_cluster,1);
+%     X = 0.4 * rand(N_cluster,1) + 0.6;
     %MXC_1
     tau_prime = -r_tau*DS*log(X);
     tau_n = sort(tau_prime-min(tau_prime));
