@@ -28,7 +28,7 @@ simParameters.NumFramesSim = 2; % Simulation time, in number of 10 ms frames
 simParameters.EnableWrapAround = false;%true; % Enable wrap-around modeling
 %XYC end
 simParameters.Scenario='RMa'; %UMi, UMa or RMa
-simParameters.ScenarioConfiguration = 'A'; % A, B
+simParameters.ScenarioConfiguration = 'B'; % A, B
 simParameters.ChannelModelType = 'CDL';
 simParameters.SchedulingType = 0; % Slot-based scheduling
 simParameters.EnableAllVisualization = false;%true;
