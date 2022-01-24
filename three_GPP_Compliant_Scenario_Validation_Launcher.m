@@ -159,8 +159,59 @@ switch simParameters.Scenario
                 simParameters.UEAntElement = 'isotropic';
                 simParameters.UEAntPolarizationModel = 'Model-2';
             case 'B'
-                disp('RMa_B');
-                error('NOT YET!');
+                % Carrier frequency, channel bandwidth, and subcarrier spacing (SCS)
+                % See 3GPP TS 38.104 section 5.3.2
+                simParameters.SCS = 15; % kHz
+                simParameters.NumRBs = 52; 
+                % 15KHz SCS: 25->5MHz, 52->10MHz, 106->20MHz, 216->40MHz
+                % 30Khz SCS: 11->5MHz, 24->10Mhz, 51->20MHz, 106->40MHz
+                % see TR37.910 Table 8.1.1-2 for detail
+                % Assume that the UL and DL carriers have the same channel bandwidth
+                simParameters.DLBandwidth = 10e6; % Hz
+                simParameters.ULBandwidth = 10e6; % Hz
+
+                simParameters.DLCarrierFreq = 4e9+10e6; % Hz
+                simParameters.ULCarrierFreq = 4e9-10e6; % Hz
+                %see 3GPP TR37.910 Table 8.2.1-1 for detailed NR bands
+                %also found in Table 8.2.1-1 and 8.2.1-2 in TS38.104
+                simParameters.DuplexMode = 0; %0 - FDD; 1 - TDD
+                %should be FDD, but TDD for now
+                
+                simParameters.InterSiteDistance = 1732; % Distance between adjacent gNBs in meters
+                simParameters.minUEgNBDistance = 10;
+                
+                % gNB configuration
+                simParameters.gNBHeight = 35; % meters. See TR 38.901 Table 7.4.1-1
+                simParameters.AntennaDowntilt = 10; % degrees
+                simParameters.AntennaSlant = 0; % degrees
+                simParameters.GNBTxPower = 46; % Tx power for gNBs in dBm
+                simParameters.GNBRxGain = 8; % Receiver antenna gain at gNB in dBi
+                simParameters.GNBTxAnts = 128;
+                simParameters.GNBRxAnts = 1;
+                simParameters.GNBTxAntPanelSize = [8 8 2 1 1]; %[M N P Mg Ng]
+                simParameters.GNBRxAntPanelSize = [1 1 1 1 1]; %[M N P Mg Ng]
+                simParameters.GNBTxAntElementSpacing = [0.5 0.8 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
+                simParameters.GNBRxAntElementSpacing = [0.5 0.8 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
+                simParameters.GNBTxAntPolarizationAngles = [45 -45];
+                simParameters.GNBRxAntPolarizationAngles = 45;
+                simParameters.GNBAntElement = '38.901';
+                simParameters.GNBAntPolarizationModel = 'Model-2';
+                
+                
+                % UE configuration
+                simParameters.NumUEsCell = 10; % Number of UEs in each cell
+                simParameters.UEHeight = 1.5; % meters
+                simParameters.UETxPower = 23; % Tx power for all the UEs in dBm
+                simParameters.UETxAnts = 1;
+                simParameters.UERxAnts = 4;
+                simParameters.UETxAntPanelSize = [1 1 1 1 1];
+                simParameters.UERxAntPanelSize = [1 2 2 1 1]; %[M N P Mg Ng]
+                simParameters.UETxAntElementSpacing = [0.5 0.5 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
+                simParameters.UERxAntElementSpacing = [0.5 0.5 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
+                simParameters.UETxAntPolarizationAngles = 0;
+                simParameters.UERxAntPolarizationAngles = [0 90];
+                simParameters.UEAntElement = 'isotropic';
+                simParameters.UEAntPolarizationModel = 'Model-2';
             otherwise
             error('NO!');
         end
