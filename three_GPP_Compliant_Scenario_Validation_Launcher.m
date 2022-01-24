@@ -165,8 +165,8 @@ switch simParameters.Scenario
                 simParameters.DLBandwidth = 10e6; % Hz
                 simParameters.ULBandwidth = 10e6; % Hz
 
-                simParameters.DLCarrierFreq = 710e6; % Hz
-                simParameters.ULCarrierFreq = 690e6; % Hz
+                simParameters.DLCarrierFreq = 4e9+10e6; % Hz
+                simParameters.ULCarrierFreq = 4e9-10e6; % Hz
                 %see 3GPP TR37.910 Table 8.2.1-1 for detailed NR bands
                 %also found in Table 8.2.1-1 and 8.2.1-2 in TS38.104
                 simParameters.DuplexMode = 0; %0 - FDD; 1 - TDD
