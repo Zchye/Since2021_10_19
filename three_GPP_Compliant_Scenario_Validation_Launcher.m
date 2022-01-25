@@ -258,7 +258,7 @@ simParameters.CQIMode = 'Subband';
 simParameters.PanelDimensions = [2 2]; % This is different from the one shown in the URL
 simParameters.SubbandSize = 4;
 simParameters.CodebookMode = 2;
-simParameters.RankIndicator = 2; 
+simParameters.RankIndicator = 4; 
 %{
 % Change DL to SISO for testing
 % Configuration copied from the original example
