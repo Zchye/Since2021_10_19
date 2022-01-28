@@ -925,7 +925,13 @@ classdef hNRGNBPhy < hNRPhyInterface
             if (L < obj.WaveformInfoUL.SymbolsPerSlot)
                 rxGrid = cat(2, rxGrid, zeros(K, obj.WaveformInfoUL.SymbolsPerSlot-L, R));
             end
-            
+            %YXC begin
+            % Quick fix to weird bug: Sometimes L exceeds the number of
+            % symbols per slot
+            if L > obj.WaveformInfoUL.SymbolsPerSlot
+                rxGrid = rxGrid(:, 1:obj.WaveformInfoUL.SymbolsPerSlot, :);
+            end
+            %YXC end
             % Practical channel estimation between the received grid
             % and each transmission layer, using the PUSCH DM-RS for
             % each layer
