@@ -4,14 +4,8 @@ classdef YusUtilityObj < handle
         %Stores the structure CQIInfo per slot per gNB per UE
         CQIInfoSet
         
-        % Stores the CQI computed from hPrecodedSINR.m
-        CQIOld
-        
         % Stores the SINR's computed from DMRS in linear scale
         DMRSSINR
-        
-        % Stores SINR's returned by function yPrecodedSINR.m
-        YuSINR
         
         %The triple (slotNum,siteIdx,ueIdx) identifies a CQIInfo
         Triple = cell(3,1);
@@ -33,7 +27,6 @@ classdef YusUtilityObj < handle
             %MXC_2
             d3 = param.NumUEsCell;
             obj.CQIInfoSet = cell(d1,d2,d3);
-            obj.CQIOld = cell(d1,d2,d3);
             obj.DMRSSINR = cell(d1,d2,d3);
             % obj. Throughput is a 4-dimensional array. The first index
             % stores link direction, 1 for DL, 2 for UL. The second index
@@ -43,7 +36,6 @@ classdef YusUtilityObj < handle
             obj.MetricsStepSize = param.MetricsStepSize;
             d4 = param.NumMetricsSteps;
             obj.Throughput = zeros(2, d3+2, d2, d4);
-            obj.YuSINR = cell(d1,d2,d3);
         end
         
         function pushSlotNum(obj,slotNum)
@@ -82,11 +74,6 @@ classdef YusUtilityObj < handle
 %             obj.Triple = cell(3,1);
         end
         
-        function storeCQIOld(obj,cqiold)
-            idx = obj.Triple;
-            obj.CQIOld{idx{1}, idx{2}, idx{3}} = cqiold;
-        end
-        
         function storeDMRSSINR(obj, SINR)
             % Stores the SINR's computed from DMRS in linear scale in
             % DMRSSINR
@@ -94,26 +81,19 @@ classdef YusUtilityObj < handle
             idx = cellfun(@(x) x, obj.Triple); % Cast the cell array Triple to a number array
             obj.DMRSSINR{idx(1),idx(2),idx(3)} = SINR;
         end
-        
+
         function storeThroughput(obj,throughputServed, siteIdx, slotNum)
             % Stores throughput in obj.Throughput
             d4Idx = slotNum/obj.MetricsStepSize;
             obj.Throughput(:,:,siteIdx,d4Idx) = throughputServed;
         end
         
-        function storeYuSINR(obj, YuSINR)
-            idx = cellfun(@(x) x, obj.Triple);
-            obj.YuSINR{idx(1),idx(2),idx(3)} = YuSINR;
-        end
-        
         function SaveFile(obj)
-             % Save the simulation data
-             YUO.CQIInfoSet = obj.CQIInfoSet;
-             YUO.CQIOld = obj.CQIOld;
-             YUO.DMRSSINR = obj.DMRSSINR;
-             YUO.Throughput = obj.Throughput;
-             YUO.YuSINR = obj.YuSINR;
-             save('outputYUO.mat','YUO')
+            % Save the simulation data
+            YUO.CQIInfoSet = obj.CQIInfoSet;
+            YUO.DMRSSINR = obj.DMRSSINR;
+            YUO.Throughput = obj.Throughput;
+            save('outputYUO.mat','YUO')
         end
     end
 end

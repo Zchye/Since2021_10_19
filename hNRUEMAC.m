@@ -202,9 +202,7 @@ classdef hNRUEMAC < hNRMAC
         %   i2 - Indicates subband PMI (1-based). It is a vector of length equal to
         %        the number of subbands or number of PRGs.
         % CQI - Array of size equal to number of RBs in the bandwidth. Each index
-        %       contains the CQI value corresponding to the RB index.
-        % YuPrecoder - Collection of precoders for each subcarrier and each
-        %       symbol
+        % contains the CQI value corresponding to the RB index.
         CSIMeasurement
 
         %CurrTxThroughputBytes Number of MAC bytes sent in current symbol
@@ -590,7 +588,7 @@ classdef hNRUEMAC < hNRMAC
             end
         end
 
-        function csirsIndication(obj, rank, pmiSet, cqi, F)
+        function csirsIndication(obj, rank, pmiSet, cqi)
             %csirsIndication Reception of CSI measurements from Phy
             %   csirsIndication(OBJ, RANK, PMISET, CQI) receives the DL channel
             %   measurements from Phy, measured on the configured CSI-RS for the
@@ -605,7 +603,6 @@ classdef hNRUEMAC < hNRMAC
             obj.CSIMeasurement.RankIndicator = rank;
             obj.CSIMeasurement.PMISet = pmiSet;
             obj.CSIMeasurement.CQI = cqi;
-            obj.CSIMeasurement.YuPrecoder = F;
         end
 
         function controlTx(obj)
