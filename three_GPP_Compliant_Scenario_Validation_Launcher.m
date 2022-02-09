@@ -234,16 +234,16 @@ simParameters.SubbandSize = 8; % Size of sub-band for CQI reporting in terms of 
 
 %YXC begin
 % 32-port CSI-RS configuration
-simParameters.CSIRSRowNumber = 16; % CSI-RS row number as per 3GPP TS 38.211 Table 7.4.1.5.3-1
-simParameters.CSIRSSubcarrierLocation = [2 4 6 8];
-simParameters.CSIRSSymbolLocation = [3 7];
-simParameters.CSIRSPeriod = [4 0];  % Slot periodicity and offset
-simParameters.PMIMode = 'Subband';  % 'Wideband' or 'Subband'
-simParameters.CQIMode = 'Subband';  % 'Wideband' or 'Subband'
-simParameters.PanelDimensions = [4 4]; % [N1 N2] as per 3GPP TS 38.214 Table 5.2.2.2.12
-simParameters.SubbandSize = 4; % Refer TS 38.214 Table 5.2.1.4-2 for valid subband sizes
-simParameters.CodebookMode = 2; % 1 or 2
-simParameters.RankIndicator = 2;
+% simParameters.CSIRSRowNumber = 16; % CSI-RS row number as per 3GPP TS 38.211 Table 7.4.1.5.3-1
+% simParameters.CSIRSSubcarrierLocation = [2 4 6 8];
+% simParameters.CSIRSSymbolLocation = [3 7];
+% simParameters.CSIRSPeriod = [4 0];  % Slot periodicity and offset
+% simParameters.PMIMode = 'Subband';  % 'Wideband' or 'Subband'
+% simParameters.CQIMode = 'Subband';  % 'Wideband' or 'Subband'
+% simParameters.PanelDimensions = [4 4]; % [N1 N2] as per 3GPP TS 38.214 Table 5.2.2.2.12
+% simParameters.SubbandSize = 4; % Refer TS 38.214 Table 5.2.1.4-2 for valid subband sizes
+% simParameters.CodebookMode = 2; % 1 or 2
+% simParameters.RankIndicator = 2;
 %
 % 16 ports
 % simParameters.CSIRSRowNumber = 11; % CSI-RS row number as per 3GPP TS 38.211 Table 7.4.1.5.3-1
@@ -256,17 +256,20 @@ simParameters.RankIndicator = 2;
 % simParameters.SubbandSize = 4; % Refer TS 38.214 Table 5.2.1.4-2 for valid subband sizes
 % simParameters.CodebookMode = 1; % 1 or 2
 % simParameters.RankIndicator = 2; 
+%
 % Copied from https://www.sharetechnote.com/html/lte_toolbox/Matlab_LteToolbox_5G_CSI_RS.html#Example_p8_Ex01
-% simParameters.CSIRSRowNumber = 6; 
-% simParameters.CSIRSSubcarrierLocation = [2 4 6 8];
-% simParameters.CSIRSSymbolLocation = 3;
-% simParameters.CSIRSPeriod = [40 1];
-% simParameters.PMIMode = 'Subband';
-% simParameters.CQIMode = 'Subband';
-% simParameters.PanelDimensions = [2 2]; % This is different from the one shown in the URL
-% simParameters.SubbandSize = 4;
-% simParameters.CodebookMode = 1;
-% simParameters.RankIndicator = 2; 
+% 8 ports
+%
+simParameters.CSIRSRowNumber = 6; 
+simParameters.CSIRSSubcarrierLocation = [2 4 6 8];
+simParameters.CSIRSSymbolLocation = 1;
+simParameters.CSIRSPeriod = [4 0];
+simParameters.PMIMode = 'Subband';
+simParameters.CQIMode = 'Subband';
+simParameters.PanelDimensions = [2 2]; % This is different from the one shown in the URL
+simParameters.SubbandSize = 4;
+simParameters.CodebookMode = 2;
+simParameters.RankIndicator = 2; 
 %{
 % Change DL to SISO for testing
 % Configuration copied from the original example
