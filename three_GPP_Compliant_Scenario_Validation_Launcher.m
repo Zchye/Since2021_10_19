@@ -27,7 +27,7 @@ simParameters.EnableWrapAround = true; % Enable wrap-around modeling
 simParameters.Scenario='RMa'; %UMi, UMa or RMa
 simParameters.ScenarioConfiguration = 'A'; % A, B
 simParameters.ChannelModelType = 'CDL';
-simParameters.SchedulingType = 0; % Slot-based scheduling
+simParameters.SchedulingType = 1; % Slot-based scheduling
 simParameters.EnableAllVisualization = false;%true;
 
 %MXC_2
@@ -486,13 +486,13 @@ for symbolNum = 1 : tickGranularity : numSymbolsSim
             LoopTime = Time - ConfTime;
             Progress = ((symbolNum-1)/tickGranularity*simParameters.NumSitesPerCluster*...
                 simParameters.NumUEsCell+(siteIdx-1)*simParameters.NumUEsCell+ueIdx)/...
-                (numSlotsSim*simParameters.NumSitesPerCluster*simParameters.NumUEsCell);
+                (numSymbolsSim*simParameters.NumSitesPerCluster*simParameters.NumUEsCell);
             TimeLeft = LoopTime/Progress + ConfTime - LoopTime;
             disp(['Time elapsed: ',datestr(Time,'dd:HH:MM:SS'), '. Remaining time: ',datestr(TimeLeft,'dd:HH:MM:SS')])
             disp(['Progress: ',num2str(floor(100*Progress)),'%. ',...
                 'Processed: UE(',num2str(ueIdx),'/',num2str(simParameters.NumUEsCell),') in ',...
                 'cell(',num2str(siteIdx),'/',num2str(simParameters.NumSitesPerCluster),') of ',...
-                'slot(',num2str(floor((symbolNum-1)/tickGranularity)+1),'/',num2str(numSlotsSim),').'])
+                'symbol(',num2str(floor((symbolNum-1)/tickGranularity)+1),'/',num2str(numSymbolsSim),').'])
             %YXC end
         end
 
