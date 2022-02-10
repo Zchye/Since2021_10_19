@@ -27,7 +27,7 @@ simParameters.EnableWrapAround = true; % Enable wrap-around modeling
 simParameters.Scenario='RMa'; %UMi, UMa or RMa
 simParameters.ScenarioConfiguration = 'A'; % A, B
 simParameters.ChannelModelType = 'CDL';
-simParameters.SchedulingType = 1; % Slot-based scheduling
+simParameters.SchedulingType = 1; % Symbol-based scheduling
 simParameters.EnableAllVisualization = false;%true;
 
 %MXC_2
