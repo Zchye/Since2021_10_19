@@ -626,6 +626,17 @@ classdef hNRGNBPhy < hNRPhyInterface
             packetInfo.TxPower = obj.TxPower;
             packetInfo.NTxAnts = numTxAnts;
             packetInfo.SampleRate = obj.WaveformInfoDL.SampleRate;
+            % Enlose additional information for computing true SINR at UE
+            % side
+            packetInfo.NCellID = obj.siteIdx; 
+            packetInfo.PDUs = obj.PDSCHPDU;
+            packetInfo.RNTIs = []; % To store the RNTI's of UE's whose PDSCH's are carried on this waveform
+            if ~isempty(obj.PDSCHPDU)
+                packetInfo.RNTIs = zeros(1,length(obj.PDSCHPDU));
+                for ii = 1:length(obj.PDSCHPDU)
+                    packetInfo.RNTIs(ii) = obj.PDSCHPDU{ii}.PDSCHConfig.RNTI;
+                end
+            end
             
             % Waveform transmission by sending it to packet
             % distribution entity

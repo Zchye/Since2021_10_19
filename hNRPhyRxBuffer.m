@@ -61,6 +61,12 @@ classdef hNRPhyRxBuffer < handle
 
         %NRxAnts Number of Rx antennas
         NRxAnts(1, 1) {mustBeMember(NRxAnts, [1,2,4,8,16,32,64,128,256,512,1024])} = 1;
+        
+        %NCellID The cell ID to which the UE attaches, for computing SINR
+        NCellID
+        
+        %RNTI The RNTI of the UE, for computing SINR
+        RNTI
     end
 
     properties (Access = private)
@@ -83,7 +89,10 @@ classdef hNRPhyRxBuffer < handle
                 'NumSamples', 0, ...
                 'SampleRate', 0, ...
                 'StartTime', 0, ...
-                'EndTime', 0);
+                'EndTime', 0,...
+                'NCellID',0,...
+                'PDUs', {[]},...
+                'RNTIs',0);
             signal.Waveform = complex(zeros(2, obj.NRxAnts));% To support codegen
 
             % To store the received signals and the associated metadata
@@ -122,6 +131,11 @@ classdef hNRPhyRxBuffer < handle
                 obj.ReceivedSignals(idx).NumSamples = signalInfo.NumSamples;
                 obj.ReceivedSignals(idx).SampleRate = signalInfo.SampleRate;
                 obj.ReceivedSignals(idx).StartTime = signalInfo.StartTime;
+                % Add additional fields for computing SINR
+                thefields = {'NCellID','PDUs','RNTIs','TxPower','NoNoise'};
+                for ii = 1:length(thefields)
+                    obj.ReceivedSignals(idx).(thefields{ii}) = signalInfo.(thefields{ii});
+                end
                 % Sample duration (in microseconds)
                 sampleDuration = 1e6 * (1 / signalInfo.SampleRate);
                 waveformDuration = signalInfo.NumSamples * sampleDuration;
@@ -222,6 +236,181 @@ classdef hNRPhyRxBuffer < handle
 
                     % Combine the IQ samples
                     nrWaveform(sampleStartIdx:sampleEndIdx, :) = nrWaveform(sampleStartIdx:sampleEndIdx, :) + ...
+                        receivedWaveform(receivedSignalStartIdx:receivedSignalEndIdx, :);
+                end
+            end
+        end
+        
+        function [PureSig, SigTxPower] = getPureSignal(obj, rxStartTime, rxDuration, sampleRate)
+            % Return signal without interference
+            
+            % Reception end time (in microseconds)
+            rxEndTime = rxStartTime + rxDuration - 1;
+            % Get indices of the overlapping signals
+            waveformIndices = getOverlappingSignalIdxs(obj, rxStartTime, rxEndTime);
+
+            % Get the resultant waveform from interfering waveforms
+            SigTxPower = NaN;
+            if isempty(waveformIndices)
+                % Return the empty waveform
+                PureSig = NaN;
+            else
+                % Calculate the number of samples per microsecond
+                numSamples = sampleRate / 1e6;
+                % Initialize the waveform
+                waveformLength = round(rxDuration * numSamples);
+                PureSig = complex(zeros(waveformLength, obj.NRxAnts));
+                % To check if the PDSCH signal for this UE exists at all
+                SigFlag = zeros(1,length(waveformIndices));
+
+                for idx = 1:length(waveformIndices)
+                    % Fetch received signal
+                    receivedSignal = obj.ReceivedSignals(waveformIndices(idx));
+                    % Suppress interfering signals
+                    if ~(receivedSignal.NCellID == obj.NCellID && any(receivedSignal.RNTIs == obj.RNTI))
+                        % If the waveform is not for this UE, suppress the
+                        % signal
+                        receivedSignal.Waveform = 0*receivedSignal.Waveform;
+                    else
+                        SigFlag(idx) = 1;
+                        SigTxPower = receivedSignal.TxPower;
+                        receivedSignal.Waveform = receivedSignal.NoNoise;
+                    end                        
+                    % Sample duration of the received signal
+                    if sampleRate ~= receivedSignal.SampleRate
+                        % Resample the waveform
+                        receivedWaveform = resample(receivedSignal.Waveform, sampleRate, receivedSignal.SampleRate);
+                    else
+                        receivedWaveform = receivedSignal.Waveform;
+                    end
+
+                    % Calculate the number of overlapping samples
+                    overlapStartTime = max(rxStartTime, receivedSignal.StartTime);
+                    overlapEndTime = min(rxEndTime, receivedSignal.EndTime) + 1;
+                    numOverlapSamples = round((overlapEndTime - overlapStartTime) * numSamples);
+
+                    % Signal received after reception start
+                    if rxStartTime < receivedSignal.StartTime
+
+                        % Calculate the overlapping start and end index of
+                        % the received waveform IQ samples
+                        receivedSignalStartIdx = 1;
+                        receivedSignalEndIdx = numOverlapSamples;
+
+                        % Calculate the overlapping start and end index of the
+                        % actual waveform IQ samples
+                        if rxEndTime <= receivedSignal.EndTime
+                            % Reception end time is less than or equal to the
+                            % received signal end time
+                            sampleStartIdx = waveformLength - numOverlapSamples + 1;
+                            sampleEndIdx = waveformLength;
+                        else
+                            % Reception end time is greater than the received
+                            % signal end time
+                            sampleStartIdx = round((receivedSignal.StartTime - rxStartTime) * numSamples) + 1;
+                            sampleEndIdx = sampleStartIdx + numOverlapSamples - 1;
+                        end
+
+                    else  % Signal received before reception start
+
+                        % Calculate the overlapping start and end index of
+                        % actual waveform IQ samples
+                        sampleStartIdx = 1;
+                        sampleEndIdx = numOverlapSamples;
+
+                        % Calculate the overlapping start and end index of
+                        % received waveform IQ samples
+                        receivedSignalStartIdx = round((rxStartTime - receivedSignal.StartTime) * numSamples) + 1;
+                        receivedSignalEndIdx = receivedSignalStartIdx + numOverlapSamples - 1;
+                    end
+
+                    % Combine the IQ samples
+                    PureSig(sampleStartIdx:sampleEndIdx, :) = PureSig(sampleStartIdx:sampleEndIdx, :) + ...
+                        receivedWaveform(receivedSignalStartIdx:receivedSignalEndIdx, :);
+                end
+                if ~any(SigFlag) % If there are no PDSCH signals for this UE
+                    PureSig = NaN;
+                end
+            end
+        end
+        
+        function PureInterf = getPureInterf(obj, rxStartTime, rxDuration, sampleRate)
+            % Returns interference only (noise has been applied already)
+            
+            % Reception end time (in microseconds)
+            rxEndTime = rxStartTime + rxDuration - 1;
+            % Get indices of the overlapping signals
+            waveformIndices = getOverlappingSignalIdxs(obj, rxStartTime, rxEndTime);
+
+            % Get the resultant waveform from interfering waveforms
+            if isempty(waveformIndices)
+                % Return the empty waveform
+                PureInterf = [];
+            else
+                % Calculate the number of samples per microsecond
+                numSamples = sampleRate / 1e6;
+                % Initialize the waveform
+                waveformLength = round(rxDuration * numSamples);
+                PureInterf = complex(zeros(waveformLength, obj.NRxAnts));
+
+                for idx = 1:length(waveformIndices)
+                    % Fetch received signal
+                    receivedSignal = obj.ReceivedSignals(waveformIndices(idx));
+                    % Suppress signal
+                    if receivedSignal.NCellID == obj.NCellID && any(receivedSignal.RNTIs == obj.RNTI)
+                        % If the waveform is for this UE, suppress it
+                        receivedSignal.Waveform = 0*receivedSignal.Waveform;
+                    end                        
+                    % Sample duration of the received signal
+                    if sampleRate ~= receivedSignal.SampleRate
+                        % Resample the waveform
+                        receivedWaveform = resample(receivedSignal.Waveform, sampleRate, receivedSignal.SampleRate);
+                    else
+                        receivedWaveform = receivedSignal.Waveform;
+                    end
+
+                    % Calculate the number of overlapping samples
+                    overlapStartTime = max(rxStartTime, receivedSignal.StartTime);
+                    overlapEndTime = min(rxEndTime, receivedSignal.EndTime) + 1;
+                    numOverlapSamples = round((overlapEndTime - overlapStartTime) * numSamples);
+
+                    % Signal received after reception start
+                    if rxStartTime < receivedSignal.StartTime
+
+                        % Calculate the overlapping start and end index of
+                        % the received waveform IQ samples
+                        receivedSignalStartIdx = 1;
+                        receivedSignalEndIdx = numOverlapSamples;
+
+                        % Calculate the overlapping start and end index of the
+                        % actual waveform IQ samples
+                        if rxEndTime <= receivedSignal.EndTime
+                            % Reception end time is less than or equal to the
+                            % received signal end time
+                            sampleStartIdx = waveformLength - numOverlapSamples + 1;
+                            sampleEndIdx = waveformLength;
+                        else
+                            % Reception end time is greater than the received
+                            % signal end time
+                            sampleStartIdx = round((receivedSignal.StartTime - rxStartTime) * numSamples) + 1;
+                            sampleEndIdx = sampleStartIdx + numOverlapSamples - 1;
+                        end
+
+                    else  % Signal received before reception start
+
+                        % Calculate the overlapping start and end index of
+                        % actual waveform IQ samples
+                        sampleStartIdx = 1;
+                        sampleEndIdx = numOverlapSamples;
+
+                        % Calculate the overlapping start and end index of
+                        % received waveform IQ samples
+                        receivedSignalStartIdx = round((rxStartTime - receivedSignal.StartTime) * numSamples) + 1;
+                        receivedSignalEndIdx = receivedSignalStartIdx + numOverlapSamples - 1;
+                    end
+
+                    % Combine the IQ samples
+                    PureInterf(sampleStartIdx:sampleEndIdx, :) = PureInterf(sampleStartIdx:sampleEndIdx, :) + ...
                         receivedWaveform(receivedSignalStartIdx:receivedSignalEndIdx, :);
                 end
             end

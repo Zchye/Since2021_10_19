@@ -7,6 +7,8 @@ classdef YusUtilityObj < handle
         % Stores the SINR's computed from DMRS in linear scale
         DMRSSINR
         
+        GodSINR
+        
         %The triple (slotNum,siteIdx,ueIdx) identifies a CQIInfo
         Triple = cell(3,1);
     end
@@ -19,6 +21,7 @@ classdef YusUtilityObj < handle
             d3 = param.NumUEsCell;
             obj.CQIInfoSet = cell(d1,d2,d3);
             obj.DMRSSINR = cell(d1,d2,d3);
+            obj.GodSINR = nan(d1,d2,d3);
         end
         
         function pushSlotNum(obj,slotNum)
@@ -63,6 +66,11 @@ classdef YusUtilityObj < handle
             
             idx = cellfun(@(x) x, obj.Triple); % Cast the cell array Triple to a number array
             obj.DMRSSINR{idx(1),idx(2),idx(3)} = SINR;
+        end
+        
+        function storeGodSINR(obj, SINR)
+            idx = cellfun(@(x) x, obj.Triple); % Cast the cell array Triple to a number array
+            obj.GodSINR(idx(1),idx(2),idx(3)) = SINR;
         end
     end
 end
