@@ -1053,7 +1053,7 @@ classdef hNRUEPhy < hNRPhyInterface
                     end
                     GodSINR = entromean(entrosum(LinSINRArray,2));
                     obj.YusUtilityParameter.YUO.storeGodSINR(GodSINR);
-                    error('Stored GodSINR successfully')
+                    %error('Stored GodSINR successfully')
                 end
                 
                 % Equalization
