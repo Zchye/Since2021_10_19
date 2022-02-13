@@ -115,8 +115,8 @@ legend('CSI-RS','DMRS')
 
 GodSINR = YUO.GodSINR; % Linear SINR numeric array, NaN's are filled in missing values
 GodSINR = permute(GodSINR,[2,3,1]); % Rearrage to NumSites-by-NumUEs-by-NumSlots
-entro = log2(1+x);
-entroinv = 2.^x-1;
+entro = @(x) log2(1+x);
+entroinv = @(x) 2.^x-1;
 GodSINREntroMean = entroinv(mean(entro(GodSINR),3,'omitnan'));
 lin2db = @(x) 10*log10*(x);
 GSEMdB = reshape(lin2db(GodSINREntroMean),[],1); % God SINR entropic mean in dB and reshaped in a cloumn vector
