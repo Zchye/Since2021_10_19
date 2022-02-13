@@ -137,6 +137,18 @@ if any(YuSINRcnt)
     plot(x_yusinr, f_yusinr)
     lgd = [lgd, 'Prec Eff CSI-RS'];
 end
+if any(~isnan(YUO.GodSINR))
+    GodSINR = YUO.GodSINR; % Linear SINR numeric array, NaN's are filled in missing values
+    GodSINR = permute(GodSINR,[2,3,1]); % Rearrage to NumSites-by-NumUEs-by-NumSlots
+    entro = @(x) log2(1+x);
+    entroinv = @(x) 2.^x-1;
+    GodSINREntroMean = entroinv(mean(entro(GodSINR),3,'omitnan'));
+    lin2db = @(x) 10*log10(x);
+    GSEMdB = reshape(lin2db(GodSINREntroMean),[],1); % God SINR entropic mean in dB and reshaped in a cloumn vector
+    [f_g, x_g] = ecdf(GSEMdB);
+    plot(x_g, f_g)
+    lgd = [lgd,{'God SINR'}];
+end
 
 legend(lgd);
 
