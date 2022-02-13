@@ -118,7 +118,7 @@ GodSINR = permute(GodSINR,[2,3,1]); % Rearrage to NumSites-by-NumUEs-by-NumSlots
 entro = @(x) log2(1+x);
 entroinv = @(x) 2.^x-1;
 GodSINREntroMean = entroinv(mean(entro(GodSINR),3,'omitnan'));
-lin2db = @(x) 10*log10*(x);
+lin2db = @(x) 10*log10(x);
 GSEMdB = reshape(lin2db(GodSINREntroMean),[],1); % God SINR entropic mean in dB and reshaped in a cloumn vector
 [f_g, x_g] = ecdf(GSEMdB);
 plot(x_g, f_g)
