@@ -92,8 +92,11 @@ classdef hNRPhyRxBuffer < handle
                 'EndTime', 0,...
                 'NCellID',0,...
                 'PDUs', {[]},...
-                'RNTIs',0);
+                'RNTIs',0,...
+                'TxPower',0,...
+                'NoNoise',complex(0,0));
             signal.Waveform = complex(zeros(2, obj.NRxAnts));% To support codegen
+            signal.NoNoise = complex(zeros(2, obj.NRxAnts));% To support codegen
 
             % To store the received signals and the associated metadata
             obj.ReceivedSignals = repmat(signal, obj.BufferSize, 1);
@@ -134,7 +137,9 @@ classdef hNRPhyRxBuffer < handle
                 % Add additional fields for computing SINR
                 thefields = {'NCellID','PDUs','RNTIs','TxPower','NoNoise'};
                 for ii = 1:length(thefields)
-                    obj.ReceivedSignals(idx).(thefields{ii}) = signalInfo.(thefields{ii});
+                    if isfield(signalInfo, thefields{ii})
+                        obj.ReceivedSignals(idx).(thefields{ii}) = signalInfo.(thefields{ii});
+                    end
                 end
                 % Sample duration (in microseconds)
                 sampleDuration = 1e6 * (1 / signalInfo.SampleRate);

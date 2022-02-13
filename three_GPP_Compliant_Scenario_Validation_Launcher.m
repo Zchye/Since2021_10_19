@@ -385,8 +385,11 @@ for siteIdx = 1:simParameters.NumSitesPerCluster
         end
         % Create an object for On-Off network traffic pattern and add it to the
         % specified UE. This object generates the uplink data traffic on the UE
+%         ulApp = networkTrafficOnOff('PacketSize', ulPacketSize(ueIdx), 'GeneratePacket', true, ...
+%             'OnTime', simParameters.NumFramesSim/100, 'OffTime', 0, 'DataRate', ulDataRate);
+        % Do not sent UL APP packets
         ulApp = networkTrafficOnOff('PacketSize', ulPacketSize(ueIdx), 'GeneratePacket', true, ...
-            'OnTime', simParameters.NumFramesSim/100, 'OffTime', 0, 'DataRate', ulDataRate);
+            'OnTime', 0, 'OffTime', simParameters.NumFramesSim/100, 'DataRate', ulDataRate);
         UEs{siteIdx, ueIdx}.addApplication(ueIdx, simParameters.LCHConfig.LCID, ulApp);
         
         dlDataRate = ceil(1000/dlPacketPeriodicity(ueIdx)) * dlPacketSize(ueIdx) * 8e-3;
