@@ -1047,7 +1047,7 @@ classdef hNRUEPhy < hNRPhyInterface
                     entroinv = @(x) 2.^x-1;
                     entromean = @(x) entroinv(mean(entro(x),'omitnan'));
                     entrosum = @(x,y) entroinv(sum(entro(x),y,'omitnan'));
-                    LinSINRArray = pdschRxSig.^2./((pdschRxInterf+pdschRxNoise).^2);
+                    LinSINRArray = abs(pdschRxSig).^2./(abs(pdschRxInterf+pdschRxNoise).^2);
                     if ~ismatrix(LinSINRArray)
                         error('The extracted resources have dimensions more than 2')
                     end
