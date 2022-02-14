@@ -93,13 +93,26 @@ plot(x, f);
 title('SINR CDF','FontSize',12);
 xlabel('UE Average SINR [dB]','FontSize',12);
 ylabel('C.D.F','FontSize',12);
+lgd = {'CSI-RS'};
+hold on
 if any(DMRSSINR_counter)
     UEAverageDMRSSINR = (sum(DMRSSINR,3))./DMRSSINR_counter;
     UEAverageDMRSSINR_dB = 10*log10(UEAverageDMRSSINR);
     [f_dmrs,x_dmrs] = ecdf(UEAverageDMRSSINR_dB(:));
-    hold on
     plot(x_dmrs,f_dmrs)
-    legend('CSI-RS','DMRS')
+    lgd = [lgd,{'DMRS'}];
 end
-
+if any(~isnan(YUO.GodSINR(:)))
+    GodSINR = YUO.GodSINR; % Linear SINR numeric array, NaN's are filled in missing values
+    GodSINR = permute(GodSINR,[2,3,1]); % Rearrage to NumSites-by-NumUEs-by-NumSlots
+    entro = @(x) log2(1+x);
+    entroinv = @(x) 2.^x-1;
+    GodSINREntroMean = entroinv(mean(entro(GodSINR),3,'omitnan'));
+    lin2db = @(x) 10*log10(x);
+    GSEMdB = reshape(lin2db(GodSINREntroMean),[],1); % God SINR entropic mean in dB and reshaped in a cloumn vector
+    [f_g, x_g] = ecdf(GSEMdB);
+    plot(x_g, f_g)
+    lgd = [lgd ,{'God SINR'}];
+end
+legend(lgd)
 end

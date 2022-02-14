@@ -7,6 +7,8 @@ classdef YusUtilityObj < handle
         % Stores the SINR's computed from DMRS in linear scale
         DMRSSINR
         
+        GodSINR
+        
         %The triple (slotNum,siteIdx,ueIdx) identifies a CQIInfo
         Triple = cell(3,1);
         
@@ -36,6 +38,7 @@ classdef YusUtilityObj < handle
             obj.MetricsStepSize = param.MetricsStepSize;
             d4 = param.NumMetricsSteps;
             obj.Throughput = zeros(2, d3+2, d2, d4);
+            obj.GodSINR = nan(d1,d2,d3);
         end
         
         function pushSlotNum(obj,slotNum)
@@ -81,11 +84,16 @@ classdef YusUtilityObj < handle
             idx = cellfun(@(x) x, obj.Triple); % Cast the cell array Triple to a number array
             obj.DMRSSINR{idx(1),idx(2),idx(3)} = SINR;
         end
-
+        
         function storeThroughput(obj,throughputServed, siteIdx, slotNum)
             % Stores throughput in obj.Throughput
             d4Idx = slotNum/obj.MetricsStepSize;
             obj.Throughput(:,:,siteIdx,d4Idx) = throughputServed;
+        end
+        
+        function storeGodSINR(obj, SINR)
+            idx = cellfun(@(x) x, obj.Triple); % Cast the cell array Triple to a number array
+            obj.GodSINR(idx(1),idx(2),idx(3)) = SINR;
         end
         
         function SaveFile(obj)
@@ -93,6 +101,7 @@ classdef YusUtilityObj < handle
             YUO.CQIInfoSet = obj.CQIInfoSet;
             YUO.DMRSSINR = obj.DMRSSINR;
             YUO.Throughput = obj.Throughput;
+            YUO.GodSINR = obj.GodSINR;
             save('outputYUO.mat','YUO')
         end
     end

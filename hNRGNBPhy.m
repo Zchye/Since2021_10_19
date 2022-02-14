@@ -643,6 +643,22 @@ classdef hNRGNBPhy < hNRPhyInterface
             packetInfo.TxPower = obj.TxPower;
             packetInfo.NTxAnts = numTxAnts;
             packetInfo.SampleRate = obj.WaveformInfoDL.SampleRate;
+            % Enlose additional information for computing true SINR at UE
+            % side
+            packetInfo.NCellID = obj.siteIdx; 
+            packetInfo.PDUs = obj.PDSCHPDU;
+            packetInfo.RNTIs = []; % To store the RNTI's of UE's whose PDSCH's are carried on this waveform
+            if ~isempty(obj.PDSCHPDU)
+                packetInfo.RNTIs = zeros(1,length(obj.PDSCHPDU));
+                for ii = 1:length(obj.PDSCHPDU)
+                    packetInfo.RNTIs(ii) = obj.PDSCHPDU{ii}.PDSCHConfig.RNTI;
+                end
+            end
+            % Enclose information for channel half switching
+            % The orientations of gNB transmit and receive antenna arrays
+            % are identical even though they use different antenna panel
+            % sizes.
+            packetInfo.TransmitArrayOrientation = obj.ChannelModel{1}.ReceiveArrayOrientation;
             
             % Waveform transmission by sending it to packet
             % distribution entity
