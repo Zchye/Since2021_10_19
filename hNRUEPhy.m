@@ -1033,7 +1033,7 @@ classdef hNRUEPhy < hNRPhyInterface
                 [pdschRx,pdschHest] = nrExtractResources(pdschIndices,rxGrid,estChannelGrid);
                 if ~isnan(SigWaveform)
                     slotWaveformSig = zeros(sum(obj.WaveformInfoDL.SymbolLengths(startSampleIndexSlot:endSampleIndexSlot)) + obj.MaxChannelDelay, prod(obj.RxAntPanel));
-                    slotWaveformInterf = zeros(sum(obj.WaveformInfoDL.SymbolLengths(startSampleIndexSlot:endSampleIndexSlot)) + obj.MaxChannelDelay, prod(obj.RxAntPanel));;
+                    slotWaveformInterf = zeros(sum(obj.WaveformInfoDL.SymbolLengths(startSampleIndexSlot:endSampleIndexSlot)) + obj.MaxChannelDelay, prod(obj.RxAntPanel));
                     slotWaveformSig(startIndex : startIndex+length(rxWaveform)-1, :) = SigWaveform;
                     slotWaveformInterf(startIndex : startIndex+length(rxWaveform)-1, :) = InterfWaveform;
                     slotWaveformSig = slotWaveformSig(1+obj.TimingOffset:end, :);
