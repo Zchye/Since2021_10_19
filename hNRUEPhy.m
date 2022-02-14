@@ -969,6 +969,11 @@ classdef hNRUEPhy < hNRPhyInterface
                     set(obj.InterfChannel, 'MeanAngles', LOSAnglesArray);
                     rxWaveform = [rxWaveform; zeros(obj.MaxInterfChannelDelay, size(rxWaveform,2))];
                     rxWaveform = obj.InterfChannel(rxWaveform);
+                    % Suppress interfering waveform to compensate for the
+                    % difference bewteen the statistics of customed channel
+                    % model and CDL-A/B/C/D/E channel model
+                    SpprsFactor = 0.5; % Suppression factor
+                    rxWaveform = SpprsFactor*rxWaveform;
                 end
             end
             
