@@ -637,6 +637,11 @@ classdef hNRGNBPhy < hNRPhyInterface
                     packetInfo.RNTIs(ii) = obj.PDSCHPDU{ii}.PDSCHConfig.RNTI;
                 end
             end
+            % Enclose information for channel half switching
+            % The orientations of gNB transmit and receive antenna arrays
+            % are identical even though they use different antenna panel
+            % sizes.
+            packetInfo.TransmitArrayOrientation = obj.ChannelModel{1}.ReceiveArrayOrientation;
             
             % Waveform transmission by sending it to packet
             % distribution entity
