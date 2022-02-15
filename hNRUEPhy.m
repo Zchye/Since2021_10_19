@@ -200,6 +200,12 @@ classdef hNRUEPhy < hNRPhyInterface
         StoreCQIInfo
         
         YusUtilityParameter
+        
+        %InterfChannel The nrCDLChannel object for filtering interefering
+        %waveforms
+        InterfChannel
+        
+        MaxInterfChannelDelay
     end
     %YXC end
     
@@ -500,6 +506,37 @@ classdef hNRUEPhy < hNRPhyInterface
                     % Update the maximum delay caused due to CDL channel model
                     obj.MaxChannelDelay = ceil(max(chInfo.PathDelays*obj.ChannelModel.SampleRate)) + chInfo.ChannelFilterDelay;
                     %}
+                    
+                    % Configure Interfering channel
+                    ChannelProfiles = arrayfun(@(x)['CDL-',x], 'ABCDE', 'UniformOutput', false); % Construct delay profile names
+                    % Construct function handles for assigning delay profiles
+                    % according to LOS conditions
+                    RandProfile = @(x) ChannelProfiles{randi(x)};
+                    RandNLOSProfile = @() RandProfile(3);
+                    RandLOSProfile = @() RandProfile([4,5]);
+                    CreateChannel = @(p) nrCDLChannel('DelayProfile',p()); % Function handle for creating channel objects based on delay profile p
+                    if CHParam.LOS
+                        obj.InterfChannel = CreateChannel(RandLOSProfile);
+                        % Configure Riccian K-factor in LOS condition
+                        set(obj.InterfChannel, 'KFactorScaling', true, 'KFactor', CHParam.LSPs.K);
+                    else
+                        obj.InterfChannel = CreateChannel(RandNLOSProfile);
+                    end
+                    % Configure other channel properties
+                    set(obj.InterfChannel, 'DelaySpread', CHParam.LSPs.DS);
+                    set(obj.InterfChannel, 'AngleScaling', true, 'AngleSpreads', obj.ChannelModel.AngleSpreads);
+                    set(obj.InterfChannel, 'TransmitAntennaArray', rmfield(obj.ChannelModel.TransmitAntennaArray, 'Orientation'));
+                    % Transmit antenna array orientation depends on the
+                    % gNB, so it will be configured after identifying the
+                    % gNB when UE receives a waveform. It will not be
+                    % configured now.
+                    set(obj.InterfChannel, 'ReceiveAntennaArray', rmfield(obj.ChannelModel.ReceiveAntennaArray, 'Orientation'));
+                    set(obj.InterfChannel, 'ReceiveArrayOrientation', obj.ChannelModel.ReceiveArrayOrientation);
+                    set(obj.InterfChannel, 'MaximumDopplerShift', obj.ChannelModel.MaximumDopplerShift);
+                    set(obj.InterfChannel, 'UTDirectionOfTravel', obj.ChannelModel.UTDirectionOfTravel);
+                    set(obj.InterfChannel, 'SampleRate', obj.ChannelModel.SampleRate);
+                    InterfchInfo = info(obj.InterfChannel);
+                    obj.MaxInterfChannelDelay = ceil(max(InterfchInfo.PathDelays*obj.InterfChannel.SampleRate)) + InterfchInfo.ChannelFilterDelay;
                 end
             end
             
@@ -910,8 +947,34 @@ classdef hNRUEPhy < hNRPhyInterface
             rxWaveform = pktInfo.Waveform;
             % Check if channel model is specified between gNB and UE
             if ~isempty(obj.ChannelModel)
-                rxWaveform = [rxWaveform; zeros(obj.MaxChannelDelay, size(rxWaveform,2))];
-                rxWaveform = obj.ChannelModel(rxWaveform);
+                % Check if the waveform is for this UE
+                NCellID = pktInfo.NCellID;
+                RNTIs = pktInfo.RNTIs;
+                if NCellID == obj.siteIdx && any(RNTIs==obj.RNTI)
+                    % The waveform is for this UE             
+                    rxWaveform = [rxWaveform; zeros(obj.MaxChannelDelay, size(rxWaveform,2))];
+                    rxWaveform = obj.ChannelModel(rxWaveform);
+                else % The waveform is interference, filter it with InterfChannel
+                    release(obj.InterfChannel);
+                    % Configure transmit atenna array orientation
+                    set(obj.InterfChannel, 'TransmitArrayOrientation', pktInfo.TransmitArrayOrientation);
+                    % Configure mean angles as LOS angles based on gNB
+                    % position
+                    gNBPos = pktInfo.Position;
+                    UEPos = obj.Node.NodePosition;
+                    [~,gNBPos] = obj.Node.DistanceCalculatorFcn(gNBPos,UEPos); % Calculate new gNB position in wrap-around mode
+                    LOSAnglesStruct = obj.getLOSAngles(gNBPos, UEPos);
+                    AngleNames = {'AOD', 'AOA', 'ZOD', 'ZOA'};
+                    LOSAnglesArray = cellfun(@(x)LOSAnglesStruct.(x), AngleNames);
+                    set(obj.InterfChannel, 'MeanAngles', LOSAnglesArray);
+                    rxWaveform = [rxWaveform; zeros(obj.MaxInterfChannelDelay, size(rxWaveform,2))];
+                    rxWaveform = obj.InterfChannel(rxWaveform);
+                    % Suppress interfering waveform to compensate for the
+                    % difference bewteen the statistics of customed channel
+                    % model and CDL-A/B/C/D/E channel model
+                    SpprsFactor = 0.5; % Suppression factor
+                    rxWaveform = SpprsFactor*rxWaveform;
+                end
             end
             
             % Apply path loss on the waveform
@@ -931,6 +994,37 @@ classdef hNRUEPhy < hNRPhyInterface
             % No noise signal
             selfInfo.Temperature = 0;
             NoNoise = applyThermalNoise(obj, NoNoise, pktInfo, selfInfo);
+        end
+        
+        function LOSAngles=getLOSAngles(~, TxPos, RxPos)
+            %getLOSAngles calculates the LOS AOD, LOS ZOD, LOS AOA, and LOS ZOA
+            %of the directed link between a transmitter and a receiver
+            %TxPos - the Cartesian coordinates of the transmitter. Must be a 3-D
+            %column vector.
+            %RxPos - the Cartesian coordinates of the receiver. Must be a 3-D
+            %column vector.
+            %LOSAngles - a structure with fields AOD, ZOD, AOA, ZOA. The values are
+            %in degrees.
+
+            %get the 3-D vector that is from the transmitter to the receiver
+            v=RxPos-TxPos;
+
+            %transform the Cartesion coordinates of v to spherical coordinates
+            [az,el,~]=cart2sph(v(1),v(2),v(3));
+
+            %From radian to degree. Note that the zenith angle is complementary to
+            %the elevation angle, and that the angle or arrival is supplementary to
+            %the angle of departure in the global coordinate system.
+            AOD=rad2deg(az);
+            ZOD=90-rad2deg(el);%zenith angle is complementary to elevation angle
+            AOA=AOD+180;
+            ZOA=ZOD+180;
+
+            %Confine the angles to be in [0,360)
+            LOSAngles.AOD=mod(AOD,360);
+            LOSAngles.ZOD=mod(ZOD,360);
+            LOSAngles.AOA=mod(AOA,360);
+            LOSAngles.ZOA=mod(ZOA,360);
         end
         
         function phyRxProcessing(obj, threeWaveforms, pdschInfo, csirsInfo)
@@ -1042,7 +1136,7 @@ classdef hNRUEPhy < hNRPhyInterface
                 [pdschRx,pdschHest] = nrExtractResources(pdschIndices,rxGrid,estChannelGrid);
                 if ~isnan(SigWaveform)
                     slotWaveformSig = zeros(sum(obj.WaveformInfoDL.SymbolLengths(startSampleIndexSlot:endSampleIndexSlot)) + obj.MaxChannelDelay, prod(obj.RxAntPanel));
-                    slotWaveformInterf = zeros(sum(obj.WaveformInfoDL.SymbolLengths(startSampleIndexSlot:endSampleIndexSlot)) + obj.MaxChannelDelay, prod(obj.RxAntPanel));;
+                    slotWaveformInterf = zeros(sum(obj.WaveformInfoDL.SymbolLengths(startSampleIndexSlot:endSampleIndexSlot)) + obj.MaxChannelDelay, prod(obj.RxAntPanel));
                     slotWaveformSig(startIndex : startIndex+length(rxWaveform)-1, :) = SigWaveform;
                     slotWaveformInterf(startIndex : startIndex+length(rxWaveform)-1, :) = InterfWaveform;
                     slotWaveformSig = slotWaveformSig(1+obj.TimingOffset:end, :);
