@@ -973,7 +973,7 @@ classdef hNRUEPhy < hNRPhyInterface
                     % Suppress interfering waveform to compensate for the
                     % difference bewteen the statistics of customed channel
                     % model and CDL-A/B/C/D/E channel model
-                    SpprsFactor = 0.5; % Suppress factor
+                    SpprsFactor = 0.5; % Suppression factor
                     rxWaveform = SpprsFactor*rxWaveform;
                 end
             end
