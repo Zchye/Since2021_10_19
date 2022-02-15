@@ -480,12 +480,15 @@ classdef hNRUEPhy < hNRPhyInterface
                     obj.ChannelModel.ReceiveAntennaArray.PolarizationAngles = param.UERxAntPolarizationAngles;
                     obj.ChannelModel.ReceiveAntennaArray.Element = param.UEAntElement;
                     obj.ChannelModel.ReceiveAntennaArray.PolarizationModel = param.UEAntPolarizationModel;
-                    obj.ChannelModel.ReceiveArrayOrientation = [0; 0; 0];
+                    %obj.ChannelModel.ReceiveArrayOrientation = [0; 0; 0];
                     
                     %MXC_2
                     
                     obj.ChannelModel.SampleRate = waveformInfo.SampleRate;
                     chInfo = info(obj.ChannelModel);
+                    % Orient UE receive antennas to point at gNB, imitate
+                    % the example in web(fullfile(docroot, '5g/ref/nrcdlchannel-system-object.html#mw_ba98154e-bd86-461a-b1ad-c177341d9f34'))
+                    obj.ChannelModel.ReceiveArrayOrientation  = [chInfo.AnglesAoA(1) chInfo.AnglesZoA(1)-90 0]';
                     % Update the maximum delay caused due to CDL channel model
                     obj.MaxChannelDelay = ceil(max(chInfo.PathDelays*obj.ChannelModel.SampleRate)) + chInfo.ChannelFilterDelay;
                     %}

@@ -151,7 +151,7 @@ switch simParameters.Scenario
                 simParameters.UERxAntElementSpacing = [0.5 0.5 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
                 simParameters.UETxAntPolarizationAngles = 0;
                 simParameters.UERxAntPolarizationAngles = [0 90];
-                simParameters.UEAntElement = 'isotropic';
+                simParameters.UEAntElement = '38.901';
                 simParameters.UEAntPolarizationModel = 'Model-2';
             case 'B'
                 disp('RMa_B');
