@@ -523,6 +523,7 @@ classdef hNRUEPhy < hNRPhyInterface
                         obj.InterfChannel = CreateChannel(RandNLOSProfile);
                     end
                     % Configure other channel properties
+                    set(obj.InterfChannel, 'CarrierFrequency', obj.ChannelModel.CarrierFrequency);
                     set(obj.InterfChannel, 'DelaySpread', CHParam.LSPs.DS);
                     set(obj.InterfChannel, 'AngleScaling', true, 'AngleSpreads', obj.ChannelModel.AngleSpreads);
                     set(obj.InterfChannel, 'TransmitAntennaArray', rmfield(obj.ChannelModel.TransmitAntennaArray, 'Orientation'));
