@@ -445,76 +445,116 @@ classdef hNRUEPhy < hNRPhyInterface
                     % Update the maximum delay caused due to CDL channel model
                     obj.MaxChannelDelay = ceil(max(chInfo.PathDelays*obj.ChannelModel.SampleRate)) + chInfo.ChannelFilterDelay;
                     %}
-                    obj.ChannelModel = nrCDLChannel; % CDL channel object
-                    obj.ChannelModel.DelayProfile = 'Custom';
-                    
-                    LinkDir = 0; % DL
-                    CHParam = ConfigChannel(param, LinkDir, obj.siteIdx, obj.RNTI);
-                    
-                    
-                    obj.ChannelModel.CarrierFrequency = param.DLCarrierFreq;
-                    obj.ChannelModel.HasLOSCluster = logical(CHParam.LOS);
-                    obj.ChannelModel.AngleSpreads = [CHParam.LSPs.ASD, CHParam.LSPs.ASA, CHParam.LSPs.ZSD, CHParam.LSPs.ZSA];
-                    if CHParam.LOS
-                        obj.ChannelModel.KFactorFirstCluster = CHParam.LSPs.K;
-                    end
-                    obj.ChannelModel.PathDelays = CHParam.tau_n';
-                    obj.ChannelModel.AveragePathGains = CHParam.P_n';
-                    obj.ChannelModel.AnglesAoA = CHParam.ADAngles.phi_n_AOA';
-                    obj.ChannelModel.AnglesAoD = CHParam.ADAngles.phi_n_AOD';
-                    obj.ChannelModel.AnglesZoA = CHParam.ADAngles.theta_n_ZOA';
-                    obj.ChannelModel.AnglesZoD = CHParam.ADAngles.theta_n_ZOD';
-                    obj.ChannelModel.XPR = CHParam.XPR;
-                    %MXC_1 quick fix
-                    %causes problems with 100M element array, change to zero for now
-                    obj.ChannelModel.NumStrongestClusters = 2;
-%                     obj.ChannelModel.NumStrongestClusters = 0;
-                    %Mxc_1
-                    %not relevant anymore due to quick fix
-                    obj.ChannelModel.ClusterDelaySpread = CHParam.c_DS;
-                    %MXC_1
-                    
-                    %MXC_2
-                    obj.TxAntPanel = param.UETxAntPanelSize;
-                    obj.RxAntPanel = param.UERxAntPanelSize;
-                    
-                    %gNB Antenna Config
-                    obj.ChannelModel.TransmitAntennaArray.Size = param.GNBTxAntPanelSize;
-                    obj.ChannelModel.TransmitAntennaArray.ElementSpacing = param.GNBTxAntElementSpacing;
-                    obj.ChannelModel.TransmitAntennaArray.PolarizationAngles = param.GNBTxAntPolarizationAngles;
-                    obj.ChannelModel.TransmitAntennaArray.Element = param.GNBAntElement;
-                    obj.ChannelModel.TransmitAntennaArray.PolarizationModel = param.GNBAntPolarizationModel;
-                    obj.ChannelModel.TransmitArrayOrientation = [CHParam.bearing; CHParam.downtilt; CHParam.slant];
-                    
-                    %UE Antenna Config
-                    obj.ChannelModel.ReceiveAntennaArray.Size = obj.RxAntPanel;
-                    obj.ChannelModel.ReceiveAntennaArray.ElementSpacing = param.UERxAntElementSpacing;
-                    obj.ChannelModel.ReceiveAntennaArray.PolarizationAngles = param.UERxAntPolarizationAngles;
-                    obj.ChannelModel.ReceiveAntennaArray.Element = param.UEAntElement;
-                    obj.ChannelModel.ReceiveAntennaArray.PolarizationModel = param.UEAntPolarizationModel;
-                    obj.ChannelModel.ReceiveArrayOrientation = [0; 0; 0];
-                    
-                    % UE Mobility
-                    c = physconst('lightspeed'); % speed of light in m/s
-                    fd = param.UEStates{obj.siteIdx,obj.RNTI}.Speed/c*param.DLCarrierFreq; % UE max Doppler frequency in Hz
-                    obj.ChannelModel.MaximumDopplerShift = fd;
-                    obj.ChannelModel.UTDirectionOfTravel = [param.UEStates{obj.siteIdx,obj.RNTI}.DirectionOfTravel; 90];
-                    %MXC_2
-                    
-                    obj.ChannelModel.SampleRate = waveformInfo.SampleRate;
-                    chInfo = info(obj.ChannelModel);
-                    % Update the maximum delay caused due to CDL channel model
-                    obj.MaxChannelDelay = ceil(max(chInfo.PathDelays*obj.ChannelModel.SampleRate)) + chInfo.ChannelFilterDelay;
-                    %}
-                    
-                    % Configure Interfering channel
                     ChannelProfiles = arrayfun(@(x)['CDL-',x], 'ABCDE', 'UniformOutput', false); % Construct delay profile names
-                    % Construct function handles for assigning delay profiles
-                    % according to LOS conditions
                     RandProfile = @(x) ChannelProfiles{randi(x)};
                     RandNLOSProfile = @() RandProfile(3);
                     RandLOSProfile = @() RandProfile([4,5]);
                     CreateChannel = @(p) nrCDLChannel('DelayProfile',p()); % Function handle for creating channel objects based on delay profile p
+                    
+                    LinkDir = 0; % DL
+                    CHParam = ConfigChannel(param, LinkDir, obj.siteIdx, obj.RNTI);
+                    if CHParam.LOS
+                        obj.ChannelModel = CreateChannel(RandLOSProfile);
+                        % Configure Riccian K-factor in LOS condition
+                        set(obj.ChannelModel, 'KFactorScaling', true, 'KFactor', CHParam.LSPs.K);
+                    else
+                        obj.ChannelModel = CreateChannel(RandNLOSProfile);
+                    end
+                    set(obj.ChannelModel, 'CarrierFrequency', param.DLCarrierFreq);
+                    set(obj.ChannelModel, 'DelaySpread', CHParam.LSPs.DS);
+                    set(obj.ChannelModel, 'AngleScaling', true, 'AngleSpreads', ...
+                        [CHParam.LSPs.ASD, CHParam.LSPs.ASA, CHParam.LSPs.ZSD, CHParam.LSPs.ZSA]);
+                    TxAntArray.Size = param.GNBTxAntPanelSize;
+                    TxAntArray.ElementSpacing = param.GNBTxAntElementSpacing;
+                    TxAntArray.PolarizationAngles = param.GNBTxAntPolarizationAngles;
+                    TxAntArray.Element = param.GNBAntElement;
+                    TxAntArray.PolarizationModel = param.GNBAntPolarizationModel;
+                    set(obj.ChannelModel, 'TransmitAntennaArray', TxAntArray);
+                    set(obj.ChannelModel, 'TransmitArrayOrientation', ...
+                        [CHParam.bearing; CHParam.downtilt; CHParam.slant]);
+                    obj.TxAntPanel = param.UETxAntPanelSize;
+                    obj.RxAntPanel = param.UERxAntPanelSize;
+                    RxAntArray.Size = obj.RxAntPanel;
+                    RxAntArray.ElementSpacing = param.UERxAntElementSpacing;
+                    RxAntArray.PolarizationAngles = param.UERxAntPolarizationAngles;
+                    RxAntArray.Element = param.UEAntElement;
+                    RxAntArray.PolarizationModel = param.UEAntPolarizationModel;
+                    set(obj.ChannelModel, 'ReceiveAntennaArray', RxAntArray);
+                    set(obj.ChannelModel, 'ReceiveArrayOrientation', [0; 0; 0]);
+                    c = physconst('lightspeed'); % speed of light in m/s
+                    fd = param.UEStates{obj.siteIdx,obj.RNTI}.Speed/c*param.DLCarrierFreq; % UE max Doppler frequency in Hz
+                    set(obj.ChannelModel, 'MaximumDopplerShift', fd);
+                    set(obj.ChannelModel, 'UTDirectionOfTravel', [param.UEStates{obj.siteIdx,obj.RNTI}.DirectionOfTravel; 90]);           
+                    set(obj.ChannelModel, 'SampleRate', waveformInfo.SampleRate);
+                    chInfo = info(obj.ChannelModel);
+                    obj.MaxChannelDelay = ceil(max(chInfo.PathDelays*obj.ChannelModel.SampleRate)) + chInfo.ChannelFilterDelay;
+                                        
+%                     obj.ChannelModel = nrCDLChannel; % CDL channel object
+%                     obj.ChannelModel.DelayProfile = 'Custom';
+                                        
+%                     obj.ChannelModel.CarrierFrequency = param.DLCarrierFreq;
+%                     obj.ChannelModel.HasLOSCluster = logical(CHParam.LOS);
+%                     obj.ChannelModel.AngleSpreads = [CHParam.LSPs.ASD, CHParam.LSPs.ASA, CHParam.LSPs.ZSD, CHParam.LSPs.ZSA];
+%                     if CHParam.LOS
+%                         obj.ChannelModel.KFactorFirstCluster = CHParam.LSPs.K;
+%                     end
+%                     obj.ChannelModel.PathDelays = CHParam.tau_n';
+%                     obj.ChannelModel.AveragePathGains = CHParam.P_n';
+%                     obj.ChannelModel.AnglesAoA = CHParam.ADAngles.phi_n_AOA';
+%                     obj.ChannelModel.AnglesAoD = CHParam.ADAngles.phi_n_AOD';
+%                     obj.ChannelModel.AnglesZoA = CHParam.ADAngles.theta_n_ZOA';
+%                     obj.ChannelModel.AnglesZoD = CHParam.ADAngles.theta_n_ZOD';
+%                     obj.ChannelModel.XPR = CHParam.XPR;
+                    %MXC_1 quick fix
+                    %causes problems with 100M element array, change to zero for now
+%                     obj.ChannelModel.NumStrongestClusters = 2;
+%                     obj.ChannelModel.NumStrongestClusters = 0;
+                    %Mxc_1
+                    %not relevant anymore due to quick fix
+%                     obj.ChannelModel.ClusterDelaySpread = CHParam.c_DS;
+                    %MXC_1
+                    
+                    %MXC_2
+%                     obj.TxAntPanel = param.UETxAntPanelSize;
+%                     obj.RxAntPanel = param.UERxAntPanelSize;
+                    
+                    %gNB Antenna Config
+%                     obj.ChannelModel.TransmitAntennaArray.Size = param.GNBTxAntPanelSize;
+%                     obj.ChannelModel.TransmitAntennaArray.ElementSpacing = param.GNBTxAntElementSpacing;
+%                     obj.ChannelModel.TransmitAntennaArray.PolarizationAngles = param.GNBTxAntPolarizationAngles;
+%                     obj.ChannelModel.TransmitAntennaArray.Element = param.GNBAntElement;
+%                     obj.ChannelModel.TransmitAntennaArray.PolarizationModel = param.GNBAntPolarizationModel;
+%                     obj.ChannelModel.TransmitArrayOrientation = [CHParam.bearing; CHParam.downtilt; CHParam.slant];
+                    
+                    %UE Antenna Config
+%                     obj.ChannelModel.ReceiveAntennaArray.Size = obj.RxAntPanel;
+%                     obj.ChannelModel.ReceiveAntennaArray.ElementSpacing = param.UERxAntElementSpacing;
+%                     obj.ChannelModel.ReceiveAntennaArray.PolarizationAngles = param.UERxAntPolarizationAngles;
+%                     obj.ChannelModel.ReceiveAntennaArray.Element = param.UEAntElement;
+%                     obj.ChannelModel.ReceiveAntennaArray.PolarizationModel = param.UEAntPolarizationModel;
+%                     obj.ChannelModel.ReceiveArrayOrientation = [0; 0; 0];
+                    
+                    % UE Mobility
+%                     c = physconst('lightspeed'); % speed of light in m/s
+%                     fd = param.UEStates{obj.siteIdx,obj.RNTI}.Speed/c*param.DLCarrierFreq; % UE max Doppler frequency in Hz
+%                     obj.ChannelModel.MaximumDopplerShift = fd;
+%                     obj.ChannelModel.UTDirectionOfTravel = [param.UEStates{obj.siteIdx,obj.RNTI}.DirectionOfTravel; 90];
+                    %MXC_2
+                    
+%                     obj.ChannelModel.SampleRate = waveformInfo.SampleRate;
+%                     chInfo = info(obj.ChannelModel);
+                    % Update the maximum delay caused due to CDL channel model
+%                     obj.MaxChannelDelay = ceil(max(chInfo.PathDelays*obj.ChannelModel.SampleRate)) + chInfo.ChannelFilterDelay;
+                    %}
+                    
+                    % Configure Interfering channel
+%                     ChannelProfiles = arrayfun(@(x)['CDL-',x], 'ABCDE', 'UniformOutput', false); % Construct delay profile names
+                    % Construct function handles for assigning delay profiles
+                    % according to LOS conditions
+%                     RandProfile = @(x) ChannelProfiles{randi(x)};
+%                     RandNLOSProfile = @() RandProfile(3);
+%                     RandLOSProfile = @() RandProfile([4,5]);
+%                     CreateChannel = @(p) nrCDLChannel('DelayProfile',p()); % Function handle for creating channel objects based on delay profile p
                     if CHParam.LOS
                         obj.InterfChannel = CreateChannel(RandLOSProfile);
                         % Configure Riccian K-factor in LOS condition
@@ -526,12 +566,12 @@ classdef hNRUEPhy < hNRPhyInterface
                     set(obj.InterfChannel, 'CarrierFrequency', obj.ChannelModel.CarrierFrequency);
                     set(obj.InterfChannel, 'DelaySpread', CHParam.LSPs.DS);
                     set(obj.InterfChannel, 'AngleScaling', true, 'AngleSpreads', obj.ChannelModel.AngleSpreads);
-                    set(obj.InterfChannel, 'TransmitAntennaArray', rmfield(obj.ChannelModel.TransmitAntennaArray, 'Orientation'));
+                    set(obj.InterfChannel, 'TransmitAntennaArray', TxAntArray);
                     % Transmit antenna array orientation depends on the
                     % gNB, so it will be configured after identifying the
                     % gNB when UE receives a waveform. It will not be
                     % configured now.
-                    set(obj.InterfChannel, 'ReceiveAntennaArray', rmfield(obj.ChannelModel.ReceiveAntennaArray, 'Orientation'));
+                    set(obj.InterfChannel, 'ReceiveAntennaArray', RxAntArray);
                     set(obj.InterfChannel, 'ReceiveArrayOrientation', obj.ChannelModel.ReceiveArrayOrientation);
                     set(obj.InterfChannel, 'MaximumDopplerShift', obj.ChannelModel.MaximumDopplerShift);
                     set(obj.InterfChannel, 'UTDirectionOfTravel', obj.ChannelModel.UTDirectionOfTravel);
