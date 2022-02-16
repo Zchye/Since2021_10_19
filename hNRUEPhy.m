@@ -950,9 +950,9 @@ classdef hNRUEPhy < hNRPhyInterface
             if ~isempty(obj.ChannelModel)
                 % Check if the waveform is for this UE
                 NCellID = pktInfo.NCellID;
-                RNTIs = pktInfo.RNTIs;
-                if NCellID == obj.siteIdx && any(RNTIs==obj.RNTI)
-                    % The waveform is for this UE             
+                %RNTIs = pktInfo.RNTIs;
+                if NCellID == obj.siteIdx
+                    % The waveform comes from the gNB in this cell
                     rxWaveform = [rxWaveform; zeros(obj.MaxChannelDelay, size(rxWaveform,2))];
                     rxWaveform = obj.ChannelModel(rxWaveform);
                 else % The waveform is interference, filter it with InterfChannel
