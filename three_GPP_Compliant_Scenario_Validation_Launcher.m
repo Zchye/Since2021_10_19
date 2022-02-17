@@ -23,7 +23,7 @@ simParameters = []; % Clear the simParameters variable
 
 % simulation configuration
 simParameters.NumFramesSim = 2; % Simulation time, in number of 10 ms frames
-simParameters.EnableWrapAround = true; % Enable wrap-around modeling
+simParameters.EnableWrapAround = false; % Enable wrap-around modeling
 simParameters.Scenario='RMa'; %UMi, UMa or RMa
 simParameters.ScenarioConfiguration = 'A'; % A, B
 simParameters.ChannelModelType = 'CDL';
