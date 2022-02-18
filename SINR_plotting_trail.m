@@ -112,8 +112,25 @@ function SINR_plotting_trail(YUO)
 % xlabel('UE Average DMRS SINR [dB]','FontSize',12)
 % ylabel('C.D.F','FontSize',12)
 %YXC end
+    figure
+    title('SINRs Comparison')
+    hold on
+    lgd = {};
+    
+    % Extract wideband SINRs from CQIInfoSet, fill the missing values
+    % with NaNs, rearrange to NumSites-by-NumUEs-by-NumSlots
+    WidebandSINR = cellfun(@ExtractSINRFromCQIInfo, permute(YUO.CQIInfoSet, [2,3,1]));
+    if all(isnan(WidebandSINR(:))) % Check if there are valid data in CQIInfoSet at all
+        disp('No valid data in YUO.CQIInfoSet');
+    else
+        WSAverage = mean(WidebandSINR,3,'omitnan'); % Average WidebandSINR over slots
+        WSAdB = 20 * log10(WSAverage); % Convert from linear to logarithmic
+        [f_csi, x_csi] = ecdf(WSAdB(:));
+        plot(x_csi, f_csi,'LineWidth',2);
+        lgd = [lgd,{'CSI-RS'}];
+    end
 
-    if all(isnan(YUO.GodSINR(:))) % Check if there is valid data at all
+    if all(isnan(YUO.GodSINR(:))) % Check if there are valid data at all
         disp('No valid data in YUO.GodSINR')
         return
     end
@@ -131,9 +148,9 @@ function SINR_plotting_trail(YUO)
     sinr{3} = entroinv(mean(entro(GodSINR),3,'omitnan')); % Entropically averaging
     
     % Plot God SINRs
-    figure
-    title('God SINRs vs 3GPP SINRs')
-    hold on
+%     figure
+%     title('God SINRs vs 3GPP SINRs')
+%     hold on
     for ii = 1:length(sinr)
         [f,x] = CalcCDF(sinr{ii});
         plot(x,f,'LineWidth',2)
@@ -157,8 +174,17 @@ function SINR_plotting_trail(YUO)
     grid on
     
     % Insert legend
-    lgd = {'No Averaging', 'Linearly Averaging', 'Entropically Averaging'};
+    lgd = [lgd, {'God No Averaging', 'God Linearly Averaging', 'God Entropically Averaging'}];
     EmptyChar = @(x) ''; % Suppress 3GPP's part of the legend
     lgd = [lgd, cellfun(EmptyChar, cell(1,NCat),'UniformOutput',false)];
     legend(lgd)
+end
+
+function sinr = ExtractSINRFromCQIInfo(CQIInfoStruct)
+    % Extract SINR from the structure of CQIInfo
+    if isempty(CQIInfoStruct)
+        sinr = nan;
+    else
+        sinr = CQIInfoStruct.SINRPerSubbandPerCW(1);
+    end
 end
