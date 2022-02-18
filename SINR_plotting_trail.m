@@ -74,32 +74,48 @@ for i = 1:numSites
     end
 end
 
+UE_average_SINR = (sum(UE_Wideband_SINR, 3))./UE_Wideband_SINR_counter;
 
-% Calculate entropic average
-f = @(x) log2(1+x);
-finv = @(x) 2.^x - 1;
-UE_average_SINR = finv((sum(f(UE_Wideband_SINR), 3))./UE_Wideband_SINR_counter);
+%YXC begin
+UEAverageDMRSSINR = (sum(DMRSSINR,3))./DMRSSINR_counter;
+%YXC end
 
-UE_average_SINR_dB = 10*log10(UE_average_SINR);
-% 10 not 20 because SINR is the ratio of powers and powers should be
-% applied with coefficient 10 when converted from linear to dB.
+UE_average_SINR_dB = 20*log10(UE_average_SINR);
+% 10 or 20?
+%YXC begin
+UEAverageDMRSSINR_dB = 20*log10(UEAverageDMRSSINR);
+%YXC end
+
 
 UE_average_SINR_dB = reshape(UE_average_SINR_dB,[],1);
 
+
 [f,x]=ecdf(UE_average_SINR_dB);
+
+%YXC begin
+[f_dmrs,x_dmrs] = ecdf(UEAverageDMRSSINR_dB(:));
+%YXC end
 
 figure('name','CDF UEs DL SINR [dB]');
 plot(x, f);
 title('SINR CDF','FontSize',12);
 xlabel('UE Average SINR [dB]','FontSize',12);
 ylabel('C.D.F','FontSize',12);
-if any(DMRSSINR_counter)
-    UEAverageDMRSSINR = (sum(DMRSSINR,3))./DMRSSINR_counter;
-    UEAverageDMRSSINR_dB = 10*log10(UEAverageDMRSSINR);
-    [f_dmrs,x_dmrs] = ecdf(UEAverageDMRSSINR_dB(:));
-    hold on
-    plot(x_dmrs,f_dmrs)
-    legend('CSI-RS','DMRS')
+hold on
+plot(x_dmrs,f_dmrs)
+legend('CSI-RS','DMRS')
+
+%YXC begin
+% figure('name','CDF UEs DL DMRS SINR [dB]')
+% plot(x_dmrs,f_dmrs)
+% title('DMRS SINR CDF','FontSize',12)
+% xlabel('UE Average DMRS SINR [dB]','FontSize',12)
+% ylabel('C.D.F','FontSize',12)
+%YXC end
 end
 
-end
+
+
+
+
+
