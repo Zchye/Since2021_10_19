@@ -10,6 +10,8 @@ classdef YusUtilityObj < handle
         % Stores the SINR's computed from DMRS in linear scale
         DMRSSINR
         
+        GodSINR
+        
         % Stores SINR's returned by function yPrecodedSINR.m
         YuSINR
         
@@ -44,6 +46,7 @@ classdef YusUtilityObj < handle
             d4 = param.NumMetricsSteps;
             obj.Throughput = zeros(2, d3+2, d2, d4);
             obj.YuSINR = cell(d1,d2,d3);
+            obj.GodSINR = nan(d1,d2,d3);
         end
         
         function pushSlotNum(obj,slotNum)
@@ -106,6 +109,11 @@ classdef YusUtilityObj < handle
             obj.YuSINR{idx(1),idx(2),idx(3)} = YuSINR;
         end
         
+        function storeGodSINR(obj, SINR)
+            idx = cellfun(@(x) x, obj.Triple); % Cast the cell array Triple to a number array
+            obj.GodSINR(idx(1),idx(2),idx(3)) = SINR;
+        end
+        
         function SaveFile(obj)
              % Save the simulation data
              YUO.CQIInfoSet = obj.CQIInfoSet;
@@ -113,6 +121,7 @@ classdef YusUtilityObj < handle
              YUO.DMRSSINR = obj.DMRSSINR;
              YUO.Throughput = obj.Throughput;
              YUO.YuSINR = obj.YuSINR;
+             YUO.GodSINR = obj.GodSINR;
              save('outputYUO.mat','YUO')
         end
     end

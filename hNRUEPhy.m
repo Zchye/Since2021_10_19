@@ -510,9 +510,9 @@ classdef hNRUEPhy < hNRPhyInterface
             
             % Create reception buffer object
             if isfield(param, 'UERxBufferSize')
-                obj.RxBuffer = hNRPhyRxBuffer('BufferSize', param.UERxBufferSize, 'NRxAnts', param.UERxAnts);
+                obj.RxBuffer = hNRPhyRxBuffer('BufferSize', param.UERxBufferSize, 'NRxAnts', param.UERxAnts,'NCellID',obj.siteIdx,'RNTI',obj.RNTI);
             else
-                obj.RxBuffer = hNRPhyRxBuffer('NRxAnts', param.UERxAnts);
+                obj.RxBuffer = hNRPhyRxBuffer('NRxAnts', param.UERxAnts,'NCellID',obj.siteIdx,'RNTI',obj.RNTI);
             end
         end
         
@@ -742,12 +742,20 @@ classdef hNRUEPhy < hNRPhyInterface
             % buffer
             
             % Apply channel model
-            rxWaveform = applyChannelModel(obj, waveformInfo);
+            [rxWaveform, NoNoise] = applyChannelModel(obj, waveformInfo);
             currTime = getCurrentTime(obj);
+            if isempty(waveformInfo.PDUs)
+                waveformInfo.PDUs = {[]};
+            end
             rxWaveformInfo = struct('Waveform', rxWaveform, ...
                 'NumSamples', size(rxWaveform, 1), ...
                 'SampleRate', waveformInfo.SampleRate, ...
-                'StartTime', currTime);
+                'StartTime', currTime,...% The following three fields are for computing true SINR
+                'NCellID', waveformInfo.NCellID,...
+                'RNTIs', waveformInfo.RNTIs,...
+                'TxPower', waveformInfo.TxPower,...
+                'NoNoise', NoNoise);
+            rxWaveformInfo.PDUs = waveformInfo.PDUs;
             
             % Store the received waveform in the buffer
             addWaveform(obj.RxBuffer, rxWaveformInfo);
@@ -803,10 +811,12 @@ classdef hNRUEPhy < hNRPhyInterface
             
             % Get the received waveform
             duration = duration + maxChannelDelay;
-            rxWaveform = getReceivedWaveform(obj.RxBuffer, currentTime + maxChannelDelay - duration, duration, obj.WaveformInfoDL.SampleRate);
+            threeWaveforms.rxWaveform = getReceivedWaveform(obj.RxBuffer, currentTime + maxChannelDelay - duration, duration, obj.WaveformInfoDL.SampleRate);
+            [threeWaveforms.PureSig, threeWaveforms.SigTxPower] = getPureSignal(obj.RxBuffer, currentTime + maxChannelDelay - duration, duration, obj.WaveformInfoDL.SampleRate);
+            threeWaveforms.PureInterf = getPureInterf(obj.RxBuffer, currentTime + maxChannelDelay - duration, duration, obj.WaveformInfoDL.SampleRate);
             
             % Process the waveform and send the decoded information to MAC
-            phyRxProcessing(obj, rxWaveform, pdschInfo, csirsInfo);
+            phyRxProcessing(obj, threeWaveforms, pdschInfo, csirsInfo);
            
             % Clear the Rx contexts
             obj.DataRxContext{symbolNumFrame + 1} = {};
@@ -894,7 +904,7 @@ classdef hNRUEPhy < hNRPhyInterface
             updatedSlotGrid = txSlotGrid;
         end
         
-        function rxWaveform = applyChannelModel(obj, pktInfo)
+        function [rxWaveform, NoNoise] = applyChannelModel(obj, pktInfo)
             %applyChannelModel Return the waveform after applying channel model
             
             rxWaveform = pktInfo.Waveform;
@@ -910,16 +920,38 @@ classdef hNRUEPhy < hNRPhyInterface
             
             % Apply receiver antenna gain
             rxWaveform = applyRxGain(obj, rxWaveform);
+            NoNoise = applyRxGain(obj, rxWaveform);
             pktInfo.TxPower = pktInfo.TxPower + obj.RxGain;
             
             % Add thermal noise to the waveform
             selfInfo.Temperature = obj.Temperature;
             selfInfo.Bandwidth = obj.CarrierInformation.DLBandwidth;
             rxWaveform = applyThermalNoise(obj, rxWaveform, pktInfo, selfInfo);
+            
+            % No noise signal
+            selfInfo.Temperature = 0;
+            NoNoise = applyThermalNoise(obj, NoNoise, pktInfo, selfInfo);
         end
         
-        function phyRxProcessing(obj, rxWaveform, pdschInfo, csirsInfo)
+        function phyRxProcessing(obj, threeWaveforms, pdschInfo, csirsInfo)
             %phyRxProcessing Process the waveform and send the decoded information to MAC
+            
+            rxWaveform = threeWaveforms.rxWaveform;
+            SigWaveform = threeWaveforms.PureSig;
+            %SigTxPower = threeWaveforms.SigTxPower;
+            InterfWaveform = threeWaveforms.PureInterf;
+            
+            % Add thermal noise to combined waveform and interference
+            % waveform
+%             selfInfo.Temperature = obj.Temperature;
+%             selfInfo.Bandwidth = obj.CarrierInformation.DLBandwidth;
+%             pktInfo.TxPower = SigTxPower;
+%             ThermalNoiseAdd = @(x) applyThermalNoise(obj, x, pktInfo, selfInfo); % Function handle for adding thermal noise
+%             rxWaveform = ThermalNoiseAdd(rxWaveform);
+%             if any(isnan(rxWaveform))
+%                 error('rxWaveform is NaN')
+%             end
+%             InterfWaveform = ThermalNoiseAdd(InterfWaveform);
             
             carrier = nrCarrierConfig;
             carrier.SubcarrierSpacing = obj.CarrierInformation.SubcarrierSpacing;
@@ -1008,6 +1040,30 @@ classdef hNRUEPhy < hNRPhyInterface
                 %YXC end
                 % Get PDSCH resource elements from the received grid
                 [pdschRx,pdschHest] = nrExtractResources(pdschIndices,rxGrid,estChannelGrid);
+                if ~isnan(SigWaveform)
+                    slotWaveformSig = zeros(sum(obj.WaveformInfoDL.SymbolLengths(startSampleIndexSlot:endSampleIndexSlot)) + obj.MaxChannelDelay, prod(obj.RxAntPanel));
+                    slotWaveformInterf = zeros(sum(obj.WaveformInfoDL.SymbolLengths(startSampleIndexSlot:endSampleIndexSlot)) + obj.MaxChannelDelay, prod(obj.RxAntPanel));
+                    slotWaveformSig(startIndex : startIndex+length(rxWaveform)-1, :) = SigWaveform;
+                    slotWaveformInterf(startIndex : startIndex+length(rxWaveform)-1, :) = InterfWaveform;
+                    slotWaveformSig = slotWaveformSig(1+obj.TimingOffset:end, :);
+                    slotWaveformInterf = slotWaveformInterf(1+obj.TimingOffset:end, :);
+                    rxGridSig = nrOFDMDemodulate(carrier, slotWaveformSig);
+                    rxGridInterf = nrOFDMDemodulate(carrier, slotWaveformInterf);
+                    [pdschRxSig,~] = nrExtractResources(pdschIndices,rxGridSig);
+                    [pdschRxInterf,~] = nrExtractResources(pdschIndices,rxGridInterf);
+                    pdschRxNoise = pdschRx - pdschRxSig;
+                    entro = @(x) log2(1+x);
+                    entroinv = @(x) 2.^x-1;
+                    entromean = @(x) entroinv(mean(entro(x),'omitnan'));
+                    entrosum = @(x,y) entroinv(sum(entro(x),y,'omitnan'));
+                    LinSINRArray = abs(pdschRxSig).^2./(abs(pdschRxInterf+pdschRxNoise).^2);
+                    if ~ismatrix(LinSINRArray)
+                        error('The extracted resources have dimensions more than 2')
+                    end
+                    GodSINR = entromean(entrosum(LinSINRArray,2));
+                    obj.YusUtilityParameter.YUO.storeGodSINR(GodSINR);
+                    %error('Stored GodSINR successfully')
+                end
                 
                 % Equalization
                 [pdschEq,csi] = nrEqualizeMMSE(pdschRx,pdschHest,noiseEst);
