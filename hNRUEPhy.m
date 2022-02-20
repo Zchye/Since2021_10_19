@@ -1039,13 +1039,13 @@ classdef hNRUEPhy < hNRPhyInterface
                 
                 %YXC begin
                 % Store SINR in YUO based on DMRS 
-%                 L_csi = length(csi);
-%                 mean_csi = zeros(L_csi,1);
-%                 for ii = 1:L_csi
-%                     mean_csi(ii) = mean(csi{ii}(:));
-%                 end
-%                 DMRSSINR = mean(mean_csi)/noiseEst-1;   % SINR in linear scale
-%                 obj.YusUtilityParameter.YUO.storeDMRSSINR(DMRSSINR);
+                L_csi = length(csi);
+                mean_csi = zeros(L_csi,1);
+                for ii = 1:L_csi
+                    mean_csi(ii) = mean(csi{ii}(:));
+                end
+                DMRSSINR = mean(mean_csi)/noiseEst-1;   % SINR in linear scale
+                obj.YusUtilityParameter.YUO.storeDMRSSINR(DMRSSINR);
                 %YXC end
                 
                 [decbits, crcFlag] = obj.DLSCHDecoder(dlschLLRs, pdschInfo.PDSCHConfig.Modulation, ...
@@ -1101,9 +1101,7 @@ classdef hNRUEPhy < hNRPhyInterface
                     rank = obj.RankIndicator;
                     %YXC begin
 %                     [cqi, pmiSet, ~, ~] = hCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
-                    [cqi, pmiSet, cqiold, ~] = hCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
-                    obj.YusUtilityParameter.YUO.storeCQIOld(cqiold);
-                    [~, ~, cqiInfo, ~] = yCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
+                    [cqi, pmiSet, cqiInfo, ~] = hCQISelect(carrier, csirsInfo, obj.CSIReportConfig, rank, Hest, nVar, obj.SINRTable);
                     %Store cqiInfo into YusUtilityObj
                     obj.StoreCQIInfo(cqiInfo);
                     %YXC end
