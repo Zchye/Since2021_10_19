@@ -239,12 +239,12 @@ simParameters.SubbandSize = 8; % Size of sub-band for CQI reporting in terms of 
 simParameters.CSIRSRowNumber = 11; % CSI-RS row number as per 3GPP TS 38.211 Table 7.4.1.5.3-1
 simParameters.CSIRSSubcarrierLocation = [1 3 5 7];
 simParameters.CSIRSSymbolLocation = 0;
-simParameters.CSIRSPeriod = [10 2];  % Slot periodicity and offset
+simParameters.CSIRSPeriod = [4 0];  % Slot periodicity and offset
 simParameters.PMIMode = 'Subband';  % 'Wideband' or 'Subband'
 simParameters.CQIMode = 'Subband';  % 'Wideband' or 'Subband'
-simParameters.PanelDimensions = [8 1]; % [N1 N2] as per 3GPP TS 38.214 Table 5.2.2.2.12
+simParameters.PanelDimensions = [4 2]; % [N1 N2] as per 3GPP TS 38.214 Table 5.2.2.2.12
 simParameters.SubbandSize = 4; % Refer TS 38.214 Table 5.2.1.4-2 for valid subband sizes
-simParameters.CodebookMode = 1; % 1 or 2
+simParameters.CodebookMode = 2; % 1 or 2
 simParameters.RankIndicator = 2; 
 % Copied from https://www.sharetechnote.com/html/lte_toolbox/Matlab_LteToolbox_5G_CSI_RS.html#Example_p8_Ex01
 % simParameters.CSIRSRowNumber = 6; 
