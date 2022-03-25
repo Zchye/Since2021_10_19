@@ -140,9 +140,9 @@ switch simParameters.Scenario
                         simParameters.UEHeight = 1.5; % meters
                         simParameters.UETxPower = 23; % Tx power for all the UEs in dBm
                         simParameters.UETxAnts = 1;
-                        simParameters.UERxAnts = 4;
+                        simParameters.UERxAnts = 1;
                         simParameters.UETxAntPanelSize = [1 1 1 1 1];
-                        simParameters.UERxAntPanelSize = [1 2 2 1 1]; %[M N P Mg Ng]
+                        simParameters.UERxAntPanelSize = [1 1 1 1 1]; %[M N P Mg Ng]
                         simParameters.UETxAntElementSpacing = [0.5 0.5 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
                         simParameters.UERxAntElementSpacing = [0.5 0.5 1 1]; % [dH dV dgv dgh] vertical and horzontal element spacing and panel spacing
                         simParameters.UETxAntPolarizationAngles = 0;
@@ -307,7 +307,7 @@ simParameters.CQIMode = 'Subband';  % 'Wideband' or 'Subband'
 simParameters.PanelDimensions = [8 1]; % [N1 N2] as per 3GPP TS 38.214 Table 5.2.2.2.12
 simParameters.SubbandSize = 4; % Refer TS 38.214 Table 5.2.1.4-2 for valid subband sizes
 simParameters.CodebookMode = 1; % 1 or 2
-simParameters.RankIndicator = 2; 
+simParameters.RankIndicator = 1; 
 
 % Copied from https://www.sharetechnote.com/html/lte_toolbox/Matlab_LteToolbox_5G_CSI_RS.html#Example_p8_Ex01
 %{
