@@ -250,8 +250,15 @@ for gNBIdx = 1:numGNBs
                 %generate in-car/Pedestrain if outdoors
                 %100% in car
                 states.InCar = 1;
-                %generate speed 
-                states.Speed = 8.33; %m/s
+                %generate speed
+                switch param.TestEnvironment
+                    case 'eMBB'
+                        states.Speed = 8.33; %m/s
+                    case 'mMTC'
+                        states.Speed = 0.83; %m/s
+                    otherwise 
+                        error('Other test environments for UMa are not implemented yet');
+                end
             end
             
         otherwise
