@@ -280,7 +280,7 @@ simParameters.NumClusters = 1;
 simParameters.NumSitesPerCluster = 57; % Number of gNBs per cluster
 
 % Set the UE and gNB positions.
-[simParameters.gNBBearing, simParameters.GNBPositions, simParameters.UEPositions, simParameters.CellPositions] = hMacrocellTopology(simParameters);
+[simParameters.gNBBearing, simParameters.GNBPositions, simParameters.UEPositions, simParameters.CellPositions, simParameters.UEStates] = hMacrocellTopology(simParameters);
 simParameters.NCellIDList = 0:simParameters.NumSitesPerCluster-1; % List of physical cell IDs
 
 %MXC_2 begin

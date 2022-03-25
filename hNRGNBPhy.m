@@ -951,8 +951,22 @@ classdef hNRGNBPhy < hNRPhyInterface
             
             %Calculate new UE position in wrap-around mode
             [~,UEPos] = obj.Node.DistanceCalculatorFcn(UEPos,gNBPos);
-
             
+            % Calculate pathloss
+            YUF = YusUtilityFunctions;
+            % Construct the structure of the parameters for input for
+            % calculating pathloss
+            paramForPL.Scenario = obj.YusUtilityParameter.Scenario;
+            paramForPL.ULCarrierFreq = obj.ChannelModel{txInfo.RNTI}.CarrierFrequency;
+            LinkDir = 1; % 0 for DL, 1 for UL
+            UEStat = obj.YusUtilityParameter.UEStat{obj.siteIdx,txInfo.RNTI};
+            UEStat.UEPosition = UEPos;
+            [pathloss, sigma_SF] = calculatePathloss(YUF, paramForPL, gNBPos, UEStat, LinkDir);
+            pathloss = normrnd(pathloss,sigma_SF); % Add shadow fading to pathloss
+
+            %{
+            % The functions for calculating pathloss are moved to
+            % YusUilityFuctions.m
             d_2D=norm(gNBPos(1:2)-UEPos(1:2));
             d_3D=norm(gNBPos(1:3)-UEPos(1:3));
             h_BS = gNBPos(3);
@@ -1051,6 +1065,7 @@ classdef hNRGNBPhy < hNRPhyInterface
                 otherwise
                     error('Scenarios other than RMa, UMi, UMa are yet to be implemented.');
             end
+            %}
             
             %MXC_1
             % Apply pathloss on IQ samples

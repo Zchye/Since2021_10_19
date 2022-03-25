@@ -1,7 +1,11 @@
 function CHParam = ConfigChannel(param, LinkDir, siteIdx, UEInfo)
-    %LinkDir    -   0 for DL, 1 for UL
-    %UEInfo - Could be RNTI or position of a UE. This flexibility is for
-    %heatmap.
+    % Configure parameters for creating instances of class nrCDLChannel.m
+    % CHParam - A structure containing the fields corresponding to portion 
+    % of properties of class nrCDLChannel.m
+    % param - Parameters throughout the whole simulation
+    % LinkDir    -   Link direction. 0 for DL, 1 for UL
+    % UEInfo - Could be the structure of states of a UE or the position of 
+    % a UE. This flexibility is for heatmap mode.
     
     %Select proper part of the Table 7.5-6 according to the scenario
     FFTabs = param.FastFadingTabs;
@@ -20,11 +24,11 @@ function CHParam = ConfigChannel(param, LinkDir, siteIdx, UEInfo)
     %step 1
     
     %Parse UEInfo
-    switch length(UEInfo)
-        case 1 % UEInfo is an RNTI
-            UEInfoType = 'RNTI';
-            RNTI = UEInfo;
-        case 3 % UEInfo is a 3-D position
+    switch class(UEInfo)
+        case 'struct' % UEInfo is an structure of states
+            UEInfoType = 'States';
+            UEStat = UEInfo;
+        case 'double' % UEInfo is a 3-D position
             UEInfoType = 'Position';
             UEPos = UEInfo;
     end
@@ -33,15 +37,15 @@ function CHParam = ConfigChannel(param, LinkDir, siteIdx, UEInfo)
     if LinkDir == 0 % DL
         TxPos = param.GNBPositions(siteIdx,:);
         switch UEInfoType
-            case 'RNTI'
-                RxPos = param.UEPositions{siteIdx}(RNTI,:);
+            case 'States'
+                RxPos = UEInfo.UEPositions;
             case 'Position'
                 RxPos = UEPos;
         end
     else % UL
         switch UEInfoType
-            case 'RNTI'
-                TxPos = param.UEPositions{siteIdx}(RNTI,:);
+            case 'States'
+                TxPos = UEInfo.UEPositions;
             case 'Position'
                 TxPos = UEPos;
         end
@@ -56,41 +60,43 @@ function CHParam = ConfigChannel(param, LinkDir, siteIdx, UEInfo)
     %UEPos = RxPos;
     if LinkDir == 0 % DL
         gNBPos = TxPos;
-        UEPos = RxPos;
+%         UEPos = RxPos;
     else % UL
         gNBPos = RxPos;
-        UEPos = TxPos;
+%         UEPos = TxPos;
     end
     %MXC_1 
     
-    LOS = assignLOS(param,gNBPos,UEPos);
-    %Convert LOS condition from logical to character array
-    %If LOS=1, PropCond='LOS'; else PropCond='NLOS'.
-    PropCond = strrep(char(LOS*double('LOS ')+(1-LOS)*double('NLOS')),' ','');
+    %Convert propagation condition to char array
+    PropCond = getPropgationCondition(UEStat);
     %step 3
-    [Pathloss, sigma_SF] = calculatePathloss(param,gNBPos,UEPos,LOS,LinkDir);
+    % Step 3 is moved into YusUtilityFunctions.m
     %step 4
-    LSPs = genLSPs(param,gNBPos,UEPos,LOS,LinkDir);
+    LSPs = genLSPs(param,gNBPos,UEStat,LinkDir);
     %step 5
-    [tau_n,tau_nForStep6] = genTau_n(param,LSPs,LOS);
+    [tau_n,tau_nForStep6] = genTau_n(param,LSPs,UEStat);
     %step 6
-    [P_n,P_per_ray,RmIdx] = genP_n(param,LOS,LSPs,tau_nForStep6);
+    [P_n,P_per_ray,RmIdx] = genP_n(param,UEStat,LSPs,tau_nForStep6);
     tau_n(RmIdx) = [];  %Remove the delays corresponding to the removed powers
     %step 7
-    ADAngles = genADAngles(param, gNBPos, UEPos, LOS, LSPs, P_n, LOSAngles,LinkDir);
+    ADAngles = genADAngles(param, gNBPos, UEStat, LSPs, P_n, LOSAngles, LinkDir);
     %step 9
-    XPR = genXPR(param, LOS);
+    XPR = genXPR(param, UEStat);
     %step 11 c_DS
-    c_DS = readTab7Dot5Dash6(Tab,'c_DS',PropCond,param.DLCarrierFreq/1e9);
+    if ~LinkDir % 0 for DL
+        c_DS = readTab7Dot5Dash6(Tab,'c_DS',PropCond,param.DLCarrierFreq/1e9);
+    else % UL
+        c_DS = readTab7Dot5Dash6(Tab,'c_DS',PropCond,param.ULCarrierFreq/1e9);
+    end
     
     %Construct CHParam
     CHParam.LOSAngles = LOSAngles;
     CHParam.bearing = bearing;
     CHParam.downtilt = downtilt;
     CHParam.slant = slant;
-    CHParam.LOS = LOS;
-    CHParam.Pathloss = Pathloss;
-    CHParam.sigma_SF = sigma_SF;
+    CHParam.LOS = UEStat.LOS;
+%     CHParam.Pathloss = Pathloss;
+%     CHParam.sigma_SF = sigma_SF;
     CHParam.LSPs = LSPs;
     CHParam.tau_n = tau_n;
     CHParam.P_n = P_n;
@@ -100,7 +106,34 @@ function CHParam = ConfigChannel(param, LinkDir, siteIdx, UEInfo)
     CHParam.c_DS = c_DS;  
 
 end
-
+%% Assistive functions
+function [PropCond, LOSCond] = getPropgationCondition(UEStat)
+    % Get propagation condition. This function will be frequently called in
+    % the following sections.
+    % UEStat - The structure with the fields being states of a UE
+    % PropCond - Propagation condition. Its value should be one of 'LOS',
+    % 'NLOS', 'O2I'.
+    % LOSCond - LOS condition, should be one of 'LOS' and 'NLOS'.
+    % The purpose of the seemingly redundant LOSCond is for reading tables
+    % of ZSD and ZOD as some them only ask for LOS conditions regardless of
+    % indoor/outdoor states.
+    
+    % Assign PropCond
+    if UEStat.Indoor % UE is indoor
+        PropCond = 'O2I';
+    elseif UEStat.LOS % UE is outdoor and LOS
+        PropCond = 'LOS';
+    else % UE is outdoor and NLOS
+        PropCond = 'NLOS';
+    end
+    
+    %Assgin LOSCond
+    if UEStat.LOS
+        LOSCond = 'LOS';
+    else
+        LOSCond = 'NLOS';
+    end
+end
 %% step 1 c)
 function LOSAngles=getLOSAngles(TxPos, RxPos)
     %getLOSAngles calculates the LOS AOD, LOS ZOD, LOS AOA, and LOS ZOA
@@ -134,6 +167,8 @@ function LOSAngles=getLOSAngles(TxPos, RxPos)
 end
 
 %% step 2
+% The assignment of UE states is moved to hMacrocellTopology.m
+%{
 function LOS=assignLOS(param,gNBPos,UEPos)
     %assignLOS assigns propagation conditions (LOS/NLOS) for each BS-UT
     %link according to 3GPP TR 38.901 Table 7.4.2-1
@@ -201,8 +236,12 @@ function Prob=UMaProb(d_2D,h_UT)
         Prob=(18/d_2D+exp(-d_2D/63)*(1-18/d_2D))*(1+C*5/4*(d_2D/100)^3*exp(-d_2D/150));
     end
 end
+%}
 
 %% step 3
+% The whole step 3 (calculate pathloss) are moved to YusUtilityFunctions.m
+% and is no longer needed here.
+%{
 function [Pathloss, sigma_SF]=calculatePathloss(param,gNBPos,UEPos,LOS,LinkDir)
     %Calculate pathloss with formulas in Table 7.4.1-1 for each BS-UT link to be modelled
     %param - a structure containing the field Scenario
@@ -340,9 +379,10 @@ function [Pathloss, sigma_SF]=RMaPathloss(d_2D,d_3D,h_BS,h_UT,f_c,LOS)
         sigma_SF = 8;
     end
 end
+%}
 
 %% step 4
-function LSPs=genLSPs(param,gNBPos,UEPos,LOS,LinkDir)
+function LSPs=genLSPs(param,gNBPos,UEStat,LinkDir)
     %Generate large scale parameters. See 3GPP TR 38.901 section 7.5 step 4
     %LinkDir - link direction. 0 for DL, 1 for UL
     %In ns-3, the LSPs are generated by three-gpp-channel-model.cc. They
@@ -351,8 +391,11 @@ function LSPs=genLSPs(param,gNBPos,UEPos,LOS,LinkDir)
     %https://github.com/nyuwireless-unipd/ns3-mmwave/blob/master/src/mmwave/model/BeamFormingMatrix/SqrtMatrix.m
     %However, the values used there do not agree with 3GPP TR 38.901 Table
     %7.5-6
-    %Here we substitute the matrix with the nearest positive semidefinite
+    %Here we replace the matrix with the nearest positive semidefinite
     %matrix.
+    
+    LOS = UEStat.LOS;
+    UEPos = UEStat.UEPosition;
     d_2D = norm(gNBPos(1:2)-UEPos(1:2));
     h_UT = UEPos(3);
     h_BS = gNBPos(3);
@@ -377,9 +420,8 @@ function LSPs=genLSPs(param,gNBPos,UEPos,LOS,LinkDir)
             error('Scenarios other than UMi, UMa, RMa are yet to be implemented.');
     end
     
-    %Convert LOS condition from logical to character array
-    %If LOS=1, PropCond='LOS'; else PropCond='NLOS'.
-    PropCond=strrep(char(LOS*double('LOS ')+(1-LOS)*double('NLOS')),' ','');
+    %Convert propagation condition to character array
+    [PropCond, LOSCond] = getPropgationCondition(UEStat);
     
     %Construct covariance table (CovT)
     if LOS
@@ -397,7 +439,7 @@ function LSPs=genLSPs(param,gNBPos,UEPos,LOS,LinkDir)
     %Select data from Table 7.5-6 to populate CovT
     mu=zeros(Npar,1);%Preallocate means
     for ii=1:Npar
-        %fill variances and means
+        %populate variances and means
         rn=parList{ii};%row name
         U=T;%Table to read, all LSPs are in table T except ZSD
         if isequal(rn,'ZSD')
@@ -405,16 +447,19 @@ function LSPs=genLSPs(param,gNBPos,UEPos,LOS,LinkDir)
             pn='sigma_lg_ZSD';
             pnmu='mu_lg_ZSD';
             switch param.Scenario
+                % Note that tables for UMa and UMi merely ask for LOS
+                % condition. Only table for RMa cares about indoor/outdoor
+                % state.
                 case 'UMa'
                     %Read sigma and comput variance
-                    CovT{rn,rn} = (U{pn,PropCond}{1})^2;
+                    CovT{rn,rn} = (U{pn,LOSCond}{1})^2;
                     %Read mu
-                    mu(ii) = U{pnmu,PropCond}{1}(d_2D,h_UT);
+                    mu(ii) = U{pnmu,LOSCond}{1}(d_2D,h_UT);
                 case 'UMi'
                     %Read sigma and comput variance
-                    CovT{rn,rn} = (U{pn,PropCond}{1})^2;
+                    CovT{rn,rn} = (U{pn,LOSCond}{1})^2;
                     %Read mu
-                    mu(ii) = U{pnmu,PropCond}{1}(d_2D,h_UT,h_BS);
+                    mu(ii) = U{pnmu,LOSCond}{1}(d_2D,h_UT,h_BS);
                 case 'RMa'
                     %Read sigma and comput variance
                     CovT{rn,rn} = (U{pn,PropCond}{1})^2;
@@ -438,7 +483,7 @@ function LSPs=genLSPs(param,gNBPos,UEPos,LOS,LinkDir)
             %Read mu
             mu(ii)=readTab7Dot5Dash6(U,pnmu,PropCond,fc);
         end
-        %fill covariances
+        %populate covariances
         for jj=1:Npar
             cn=parList{jj};%column name
             pn=[rn,'vs',cn];
@@ -448,7 +493,8 @@ function LSPs=genLSPs(param,gNBPos,UEPos,LOS,LinkDir)
     end
    
     %Read sigma_SF and PL
-    [Pathloss, sigma_SF]=calculatePathloss(param,gNBPos,UEPos,LOS,LinkDir);
+    YUF = YusUtilityFunctions;
+    [Pathloss, sigma_SF] = calculatePathloss(YUF, param, gNBPos, UEStat, LinkDir);
     CovT{'SF','SF'}=sigma_SF^2;
     mu(1)=Pathloss;
     
@@ -517,12 +563,11 @@ function y=readTab7Dot5Dash6(T,row,col,fc)
 end
 
 %% step 5
-function [tau_n,tau_nForStep6] = genTau_n(param,LSPs,LOS)
+function [tau_n,tau_nForStep6] = genTau_n(param,LSPs,UEStat)
     %Generate cluster delays tau_n. See 3GPP TR 38.901 section 7.5 step 5.
     
-    %Convert LOS condition from logical to character array
-    %If LOS=1, PropCond='LOS'; else PropCond='NLOS'.
-    PropCond = strrep(char(LOS*double('LOS ')+(1-LOS)*double('NLOS')),' ','');
+    %Convert propagation condition to character array
+    [PropCond, ~] = getPropgationCondition(UEStat);
     
     FastFadingTabs = param.FastFadingTabs;
     
@@ -557,7 +602,7 @@ function [tau_n,tau_nForStep6] = genTau_n(param,LSPs,LOS)
     tau_nForStep6=tau_n;
     
     %In case of LOS, scale the delays
-    if LOS
+    if UEStat.LOS
         K = LSPs.K;
         C_tau = 0.7705-0.0433*K+0.0002*K^2+0.000017*K^3;
         tau_n = tau_n/C_tau;
@@ -565,12 +610,11 @@ function [tau_n,tau_nForStep6] = genTau_n(param,LSPs,LOS)
 end
 
 %% step 6
-function [P_n,P_per_ray,RmIdx] = genP_n(param,LOS,LSPs,tau_n)
+function [P_n,P_per_ray,RmIdx] = genP_n(param,UEStat,LSPs,tau_n)
     %Generate cluster powers P_n. See 3GPP TR 38.901 section 7.5 step 6.
 
-    %Convert LOS condition from logical to character array
-    %If LOS=1, PropCond='LOS'; else PropCond='NLOS'.
-    PropCond = strrep(char(LOS*double('LOS ')+(1-LOS)*double('NLOS')),' ','');
+    %Convert propagation condition to character array
+    [PropCond, ~] = getPropgationCondition(UEStat);
 
     %Select table according to the scenario
     switch param.Scenario
@@ -598,7 +642,7 @@ function [P_n,P_per_ray,RmIdx] = genP_n(param,LOS,LSPs,tau_n)
 
     %Ricean K-factor converted to linear scale
     %TR38.901 uses 10log10, MATLAB db2mag uses 20log10
-    if LOS
+    if UEStat.LOS
     K_R = 10 ^ (LSPs.K / 10); 
     end
 
@@ -612,7 +656,7 @@ function [P_n,P_per_ray,RmIdx] = genP_n(param,LOS,LSPs,tau_n)
     %normalize the cluster powers so that the sum power of all cluster powers is equal to one
     P_n = P_prime / sum(P_prime);
 
-    if LOS
+    if UEStat.LOS
         P_1_LOS = K_R / (K_R + 1);
         P_n = P_n * (1 / (K_R + 1));
         P_n(1) = P_n(1) + P_1_LOS;
@@ -642,7 +686,7 @@ function [P_n,P_per_ray,RmIdx] = genP_n(param,LOS,LSPs,tau_n)
 end
 
 %% step 7
-function ADAngles = genADAngles(param, gNBPos,UEPos, LOS, LSPs, P, LOSAngles, LinkDir)
+function ADAngles = genADAngles(param, gNBPos, UEStat, LSPs, P, LOSAngles, LinkDir)
     %Generate arrival angles and departure angles for both azimuth and
     %elevation
     
@@ -653,27 +697,27 @@ function ADAngles = genADAngles(param, gNBPos,UEPos, LOS, LSPs, P, LOSAngles, Li
     end
     InputStruct.fc = fc;
     InputStruct.gNBPos = gNBPos;
-    InputStruct.UEPos = UEPos;
+    InputStruct.UEPos = UEStat.UEPosition;
+    InputStruct.UEStat = UEStat;
     
     %Construct InputStruct    
     InputStruct.ASA = LSPs.ASA;
     InputStruct.ASD = LSPs.ASD;
     InputStruct.ZSA = LSPs.ZSA;
     InputStruct.ZSD = LSPs.ZSD;
-    if LOS
+    if UEStat.LOS
     InputStruct.K = LSPs.K;
     end
     InputStruct.P = P;
-    InputStruct.LOS = LOS;
+    InputStruct.LOS = UEStat.LOS;
     InputStruct.param = param;
     InputStruct.AOD = LOSAngles.AOD;
     InputStruct.ZOD = LOSAngles.ZOD;
     InputStruct.AOA = LOSAngles.AOA;
     InputStruct.ZOA = LOSAngles.ZOA;
     
-    %Convert LOS condition from logical to character array
-    %If LOS=1, PropCond='LOS'; else PropCond='NLOS'.
-    InputStruct.PropCond = strrep(char(LOS*double('LOS ')+(1-LOS)*double('NLOS')),' ','');
+    %Convert propagation condition to character array
+    [InputStruct.PropCond, ~] = getPropgationCondition(UEStat);
 
     %Select proper part of Table 7.5-6 according to the scenario
     FastFadingTabs = param.FastFadingTabs;
@@ -881,13 +925,14 @@ function OutputStruct = genAnglesCodeBlock(InputStruct)
             
             gNBPos = InputStruct.gNBPos;
             UEPos = InputStruct.UEPos;
-            LOS = InputStruct.LOS;
+%             LOS = InputStruct.LOS;
             param = InputStruct.param;
             fc = InputStruct.fc;
+            UEStat = InputStruct.UEStat;
             
             if ~InputStruct.LOS %For NLOS
                 rowname = 'mu_offset_ZOD';
-                mu_offset_ZOD = readZODTab(param,rowname,gNBPos,UEPos,LOS,fc);
+                mu_offset_ZOD = readZODTab(param,rowname,gNBPos,UEPos,UEStat,fc);
                 theta_n = X.*theta_n_prime + Y + ZOD + mu_offset_ZOD;   %Equation 7.5-19
             else %For LOS
                 theta_n = (X.*theta_n_prime+Y)-(X(1)*theta_n_prime(1)+Y(1)-ZOD);    %Equation 7.5-17
@@ -895,7 +940,7 @@ function OutputStruct = genAnglesCodeBlock(InputStruct)
             
             %Equation 7.5-20
             rowname = 'mu_lg_ZSD';
-            mu_lg_ZSD = readZODTab(param,rowname,gNBPos,UEPos,LOS,fc);
+            mu_lg_ZSD = readZODTab(param,rowname,gNBPos,UEPos,UEStat,fc);
             theta_n_m = zeros(N,20);
             for n = 1:N
                 for m = 1:20
@@ -911,44 +956,43 @@ function OutputStruct = genAnglesCodeBlock(InputStruct)
                            
 end
 
-function y = readZODTab(param,rowname,gNBPos,UEPos,LOS,fc)
+function y = readZODTab(param,rowname,gNBPos,UEPos,UEStat,fc)
     %Read data from 3GPP TR 38.901 Table 7.5-7, 7.5-8, 7.5-9
     %fc is in GHz
 
     d_2D = norm(gNBPos(1:2)-UEPos(1:2));
     h_UT = UEPos(3);
     h_BS = gNBPos(3);
-    %Convert LOS condition from logical to character array
-    %If LOS=1, PropCond='LOS'; else PropCond='NLOS'.
-    PropCond = strrep(char(LOS*double('LOS ')+(1-LOS)*double('NLOS')),' ','');
+    %Convert propagation condition to character array
+    [PropCond, LOSCond] = getPropgationCondition(UEStat);
     
     switch param.Scenario
         case 'UMa'
             Tab = param.FastFadingTabs.ZSDZODOffsetUMa;
             switch rowname
                 case 'mu_lg_ZSD'
-                    y = Tab{rowname,PropCond}{1}(d_2D,h_UT);
+                    y = Tab{rowname,LOSCond}{1}(d_2D,h_UT);
                 case 'sigma_lg_ZSD'
-                    y = Tab{rowname,PropCond}{1};
+                    y = Tab{rowname,LOSCond}{1};
                 case 'mu_offset_ZOD'
-                    if LOS
+                    if UEStat.LOS
                         y = 0;
                     else
-                        y = Tab{rowname,PropCond}{1}(fc,d_2D,h_UT);
+                        y = Tab{rowname,LOSCond}{1}(fc,d_2D,h_UT);
                     end
             end
         case 'UMi'
             Tab = param.FastFadingTabs.ZSDZODOffsetUMi;
             switch rowname
                 case 'mu_lg_ZSD'
-                    y = Tab{rowname,PropCond}{1}(d_2D,h_UT,h_BS);
+                    y = Tab{rowname,LOSCond}{1}(d_2D,h_UT,h_BS);
                 case 'sigma_lg_ZSD'
-                    y = Tab{rowname,PropCond}{1};
+                    y = Tab{rowname,LOSCond}{1};
                 case 'mu_offset_ZOD'
-                    if LOS
+                    if UEStat.LOS
                         y = 0;
                     else
-                        y = Tab{rowname,PropCond}{1}(d_2D);
+                        y = Tab{rowname,LOSCond}{1}(d_2D);
                     end
             end
         case 'RMa'
@@ -959,11 +1003,7 @@ function y = readZODTab(param,rowname,gNBPos,UEPos,LOS,fc)
                 case 'sigma_lg_ZSD'
                     y = Tab{rowname,PropCond}{1};
                 case 'mu_offset_ZOD'
-                    if LOS
-                        y = 0;
-                    else
-                        y = Tab{rowname,PropCond}{1}(d_2D);
-                    end
+                    y = Tab{rowname,PropCond}{1}(d_2D);
             end
     end
     
@@ -973,7 +1013,7 @@ end
 %Already implemented in nrCDLChannel
 
 %% step 9
-function XPR = genXPR(param, LOS)
+function XPR = genXPR(param, UEStat)
     %Generate the cross polarization power ratios (XPR)
     
     Tabs = param.FastFadingTabs;
@@ -990,9 +1030,8 @@ function XPR = genXPR(param, LOS)
             error('Scenarios other than UMa, UMi, RMa are yet to be implemented.');
     end
     
-    %Convert LOS condition from logical to character array
-    %If LOS=1, PropCond='LOS'; else PropCond='NLOS'.
-    PropCond = strrep(char(LOS*double('LOS ')+(1-LOS)*double('NLOS')),' ','');
+    %Convert propagation condition to character array
+    [PropCond, ~] = getPropgationCondition(UEStat);
     
     %Assign the mean (in dB) to XPR.
     %This is NOT compliant with section 7.5 step 9 since it requires XPR
