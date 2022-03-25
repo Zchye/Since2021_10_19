@@ -4,7 +4,7 @@ function CHParam = ConfigChannel(param, LinkDir, siteIdx, UEInfo)
     % of properties of class nrCDLChannel.m
     % param - Parameters throughout the whole simulation
     % LinkDir    -   Link direction. 0 for DL, 1 for UL
-    % UEInfo - Could be the structure of states of a UE or the position of 
+    % UEInfo - Could be the structure of states of a UE or the RNTI of 
     % a UE. This flexibility is for heatmap mode.
     
     %Select proper part of the Table 7.5-6 according to the scenario
@@ -25,30 +25,20 @@ function CHParam = ConfigChannel(param, LinkDir, siteIdx, UEInfo)
     
     %Parse UEInfo
     switch class(UEInfo)
-        case 'struct' % UEInfo is an structure of states
-            UEInfoType = 'States';
+        case 'struct' % UEInfo is a structure of states
+%             UEInfoType = 'States';
             UEStat = UEInfo;
-        case 'double' % UEInfo is a 3-D position
-            UEInfoType = 'Position';
-            UEPos = UEInfo;
+        case 'double' % UEInfo is an RNTI
+%             UEInfoType = 'RNTI';
+            UEStat = param.UEStates{siteIdx,UEInfo};
     end
     
     %MXC_1 
     if LinkDir == 0 % DL
         TxPos = param.GNBPositions(siteIdx,:);
-        switch UEInfoType
-            case 'States'
-                RxPos = UEInfo.UEPositions;
-            case 'Position'
-                RxPos = UEPos;
-        end
+        RxPos = UEStat.UEPosition;
     else % UL
-        switch UEInfoType
-            case 'States'
-                TxPos = UEInfo.UEPositions;
-            case 'Position'
-                TxPos = UEPos;
-        end
+        TxPos = UEStat.UEPosition;
         RxPos = param.GNBPositions(siteIdx,:);
     end
     LOSAngles = getLOSAngles(TxPos,RxPos);
@@ -505,8 +495,8 @@ function LSPs=genLSPs(param,gNBPos,UEStat,LinkDir)
     %Make CovM symmetric by flipping the lower part to the upper part
     CovM=CovM+triu(CovM',1);
      
-    %Cholesky decomposition. L*L'=CovM
-    L=cholDcmp(CovM,'lower');
+    %Transpose decomposition. L*L'=CovM
+    L=transDcmp(CovM);
     
     %Generate Npar iid N(0,1) Gaussian random variables
     x=randn(Npar,1);
@@ -1050,7 +1040,7 @@ function B = nearestPosSemDef(A)
     A = (A+A')/2; %Make A symmetric
     [V,D] = eig(A); %Eigenvalue decomposition
     n = size(D,1);
-    e = 1e-9;
+    e = 0;%1e-9; % Tolerance for error
     %Make the eigenvalues of A nonnegative
     for ii = 1:n
         if D(ii,ii) <0
@@ -1062,16 +1052,36 @@ function B = nearestPosSemDef(A)
     B = (B+B')/2; %To compensate for rounding errors
 end
 
-function C = cholDcmp(varargin)
-    %Implement Cholesky decomposition
-    A = varargin{1};
-    while ~all(eig(A)>=0)
-        A = nearestPosSemDef(A);
+function C = transDcmp(A)
+    %Implement transpose decomposition.
+    % We do not use the MATLAB built-in function chol because it can only
+    % compute for positve definite matrices, whereas we want to also
+    % compute for positive semi-definite matrices.
+    % A - A positive semi-definite matrix to be decomposed
+    % C - The result of decomposition such that C*C' = A
+    
+%     A = varargin{1};
+%     while ~all(eig(A)>=0)
+%         A = nearestPosSemDef(A);
+%     end
+
+    A = nearestPosSemDef(A);
+    [V,D] = eig(A);
+    % Compute sqrt(D). To avoid rounding errors that may cause sqrt(D)
+    % to have complex values.
+    sqrtD = zeros(size(D,1));
+    for ii = 1:size(D,1)
+        if D(ii,ii)>=0
+            sqrtD(ii,ii) = sqrt(D(ii,ii));
+        else
+            sqrtD(ii,ii) = 0;
+        end
     end
-    if nargin == 1
-        C = chol(A);
-    else
-        C = chol(A,varargin{2});
-    end
+    C = V*sqrtD;
+%     if nargin == 1
+%         C = chol(A);
+%     else
+%         C = chol(A,varargin{2});
+%     end
             
 end

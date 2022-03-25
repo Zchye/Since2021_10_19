@@ -48,6 +48,7 @@ classdef YusUtilityFunctions < handle
             % Calculate Pathloss
             % PL_b is the basic outdoor pathloss
             [PL_b, sigma_SF]=h(d_2D,d_3D,h_BS,h_UT,f_c,LOS);
+            mu = 0; %band-aid
             if ~UEStat.Indoor % UE is outdoor
                 PL_tw = 0; % No penetration loss for outdoor UEs
                 PL_in = 0; % No inside loss for outdoor UEs

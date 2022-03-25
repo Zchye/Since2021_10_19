@@ -186,8 +186,11 @@ classdef hNRUEPhy < hNRPhyInterface
         %MXC_1
         siteIdx
         
-        YusUtilityParameter
+        %YXC begin
+        % Yuxiao has moved this property to public properties
+%         YusUtilityParameter
         %MXC_1
+        %YXC end
     end
     
     %YXC begin
@@ -195,6 +198,8 @@ classdef hNRUEPhy < hNRPhyInterface
         %StoreCQIInfo stores the callback to the YusUtilityObj for storing
         %CQIInfo returned by the function hCQISelect in runtime
         StoreCQIInfo
+        
+        YusUtilityParameter
     end
     %YXC end
     
@@ -258,7 +263,7 @@ classdef hNRUEPhy < hNRPhyInterface
             obj.YusUtilityParameter.Scenario = param.Scenario;
             %MXC_1
             
-            obj.YusUtilityParameter.UEStat = param.UEStat{siteIdx, rnti};
+            obj.YusUtilityParameter.UEStat = param.UEStates{siteIdx, rnti};
             
             % Create UL-SCH encoder system object
             ulschEncoder = nrULSCH;
@@ -483,6 +488,11 @@ classdef hNRUEPhy < hNRPhyInterface
                     obj.ChannelModel.ReceiveAntennaArray.PolarizationModel = param.UEAntPolarizationModel;
                     obj.ChannelModel.ReceiveArrayOrientation = [0; 0; 0];
                     
+                    % UE Mobility
+                    c = physconst('lightspeed'); % speed of light in m/s
+                    fd = param.UEStates{obj.siteIdx,obj.RNTI}.Speed/c*param.DLCarrierFreq; % UE max Doppler frequency in Hz
+                    obj.ChannelModel.MaximumDopplerShift = fd;
+                    obj.ChannelModel.UTDirectionOfTravel = [param.UEStates{obj.siteIdx,obj.RNTI}.DirectionOfTravel; 90];
                     %MXC_2
                     
                     obj.ChannelModel.SampleRate = waveformInfo.SampleRate;
@@ -1004,6 +1014,17 @@ classdef hNRUEPhy < hNRPhyInterface
                 Qm = length(dlschLLRs{1})/length(rxSymbols{cwIdx}); % bits per symbol
                 csi{cwIdx} = repmat(csi{cwIdx}.',Qm,1);   % expand by each bit per symbol
                 dlschLLRs{cwIdx} = dlschLLRs{cwIdx} .* csi{cwIdx}(:);   % scale
+                
+                %YXC begin
+                % Store SINR in YUO based on DMRS 
+                L_csi = length(csi);
+                mean_csi = zeros(L_csi,1);
+                for ii = 1:L_csi
+                    mean_csi(ii) = mean(csi{ii}(:));
+                end
+                DMRSSINR = mean(mean_csi)/noiseEst-1;   % SINR in linear scale
+                obj.YusUtilityParameter.YUO.storeDMRSSINR(DMRSSINR);
+                %YXC end
                 
                 [decbits, crcFlag] = obj.DLSCHDecoder(dlschLLRs, pdschInfo.PDSCHConfig.Modulation, ...
                     pdschInfo.PDSCHConfig.NumLayers, pdschInfo.RV, pdschInfo.HARQID);

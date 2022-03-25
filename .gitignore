@@ -1,1 +1,4 @@
 *.asv
+/simParameters.mat
+/simulationLogs.mat
+/outputYUO.mat

@@ -220,6 +220,8 @@ classdef hNRGNBPhy < hNRPhyInterface
             obj.YusUtilityParameter.Scenario = param.Scenario;
             %MXC_1
             
+            obj.YusUtilityParameter.UEStat = param.UEStates;
+            
             % Create DL-SCH encoder system objects for the UEs
             obj.DLSCHEncoders = cell(param.NumUEs, 1);
             for i=1:param.NumUEs
@@ -376,6 +378,12 @@ classdef hNRGNBPhy < hNRPhyInterface
                         channel.ReceiveAntennaArray.PolarizationModel = param.GNBAntPolarizationModel;
                         channel.ReceiveArrayOrientation = [CHParam.bearing; CHParam.downtilt; CHParam.slant];
                         %MXC_2
+                        
+                        % UE Mobility
+                        c = physconst('lightspeed'); % speed of light in m/s
+                        fd = param.UEStates{obj.siteIdx,ueIdx}.Speed/c*param.ULCarrierFreq; % UE max Doppler frequency in Hz
+                        channel.MaximumDopplerShift = fd;
+                        channel.UTDirectionOfTravel = [param.UEStates{obj.siteIdx,ueIdx}.DirectionOfTravel; 90];
                         
                         channel.SampleRate = waveformInfo.SampleRate;
                         chInfo = info(channel);
